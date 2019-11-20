@@ -1,6 +1,6 @@
-# Changelog for Thoth's Template GitHub Project
+# Changelog for Qeb-Hwt
 
-## [0.1.0] - 2019-Sep-11 - goern
+## [0.1.0] - 2019-Nov-20 - goern
 
 ### Added
 
