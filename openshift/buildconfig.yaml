@@ -32,7 +32,6 @@ spec:
     type: Source
   triggers:
     - imageChange:
-        lastTriggeredImageID: quay.io/thoth-station/s2i-thoth-fedora30-py37@sha256:36f3c3abd8d250fdd77cb5270eb98a1252ad0958cfa60ecf34f9db9891f4e4bf
       type: ImageChange
     - type: ConfigChange
     - github:

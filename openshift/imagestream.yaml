@@ -8,7 +8,7 @@ metadata:
   name: qeb-hwt-github-app
 spec:
   lookupPolicy:
-    local: True
+    local: true
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
@@ -16,7 +16,7 @@ metadata:
   name: s2i-thoth-fedora30-py37
 spec:
   lookupPolicy:
-    local: True
+    local: true
   tags:
     - name: latest
       from:
