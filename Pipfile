@@ -4,10 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-thoth-common = "*"
 click = "*"
 aiohttp = "<4.0"
 octomachinery = "*"
+thoth-common = "*"
 
 [dev-packages]
 black = "*"
