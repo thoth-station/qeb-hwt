@@ -2,14 +2,11 @@
     check:
       jobs:
         - "thoth-coala"
-        - "thoth-pytest"
     gate:
       queue: "qeb-hwt"
       jobs:
         - "thoth-coala"
-        - "thoth-pytest"
     kebechet-auto-gate:
       queue: "qeb-hwt"
       jobs:
         - "thoth-coala"
-        - "thoth-pytest"

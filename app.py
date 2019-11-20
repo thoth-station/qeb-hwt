@@ -30,7 +30,6 @@ from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
 from octomachinery.github.api.app_client import GitHubApp
-from octomachinery.app.server.machinery import run_forever
 from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
@@ -41,7 +40,7 @@ from thoth.qeb_hwt.version import __version__
 init_logging()
 
 _LOGGER = logging.getLogger("aicoe.sesheta")
-_LOGGER.info(f"Qeb-Hwt, v{__version__}")
+_LOGGER.info(f"Qeb-Hwt GitHub App, v{__version__}")
 logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt",
+        name="Qeb-Hwt GitHub App",
         version=get_version_from_scm_tag(root="./", relative_to=__file__),
         url="https://github.com/apps/qeb-hwt",
     )
