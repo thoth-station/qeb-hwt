@@ -16,7 +16,6 @@ repos:
       # Side-effects:
       - id: trailing-whitespace
       - id: check-merge-conflict
-      - id: double-quote-string-fixer
       - id: end-of-file-fixer
 
       # Non-modifying checks:
