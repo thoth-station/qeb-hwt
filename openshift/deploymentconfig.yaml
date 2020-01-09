@@ -39,6 +39,12 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
+        - envFrom:
+          - configMapRef:
+                name: ultrahook-configmap
+          image: ultrahook:latest
+          imagePullPolicy: Always
+          name: ultrahook
   test: false
   triggers:
     - imageChangeParams:
@@ -48,5 +54,13 @@ spec:
         from:
           kind: ImageStreamTag
           name: qeb-hwt-github-app:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - ultrahook
+        from:
+          kind: ImageStreamTag
+          name: 'ultrahook:latest'
       type: ImageChange
     - type: ConfigChange
