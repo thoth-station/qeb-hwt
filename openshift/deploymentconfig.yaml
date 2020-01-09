@@ -44,7 +44,7 @@ spec:
     - imageChangeParams:
         automatic: true
         containerNames:
-          - qeb-hwt
+          - github-app
         from:
           kind: ImageStreamTag
           name: qeb-hwt-github-app:latest
