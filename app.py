@@ -21,6 +21,10 @@ import os
 import asyncio
 import pathlib
 import logging
+import random
+import time
+
+from datetime import datetime
 
 import gidgethub
 
@@ -34,13 +38,13 @@ from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
 
-from thoth.qeb_hwt.version import __version__
+from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
 
 init_logging()
 
 _LOGGER = logging.getLogger("aicoe.sesheta")
-_LOGGER.info(f"Qeb-Hwt GitHub App, v{__version__}")
+_LOGGER.info(f"Qeb-Hwt GitHub App, v{qeb_hwt_version}")
 logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 
@@ -68,6 +72,77 @@ async def on_install(
     _LOGGER.info("installation=%s", RUNTIME_CONTEXT.app_installation)
 
 
+@process_event_actions("pull_request", {"opened", "reopened", "synchronize", "edited"})
+@process_webhook_payload
+async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender, organization, installation, **kwargs):
+    """React to an opened or changed PR event.
+
+    Send a status update to GitHub via Checks API.
+    """
+    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
+
+    github_api = RUNTIME_CONTEXT.app_installation_client
+
+    check_run_name = "Thoth: Advise (Developer Preview)"
+
+    pr_head_sha = pull_request["merge_commit_sha"]
+    if pr_head_sha is None:
+        pr_head_sha = pull_request["head"]["sha"]
+
+    repo_url = pull_request["base"]["repo"]["url"]
+
+    check_runs_base_uri = f"{repo_url}/check-runs"
+
+    resp = await github_api.post(
+        check_runs_base_uri,
+        preview_api_version="antiope",
+        data={
+            "name": check_run_name,
+            "head_sha": pr_head_sha,
+            "status": "queued",
+            "started_at": f"{datetime.utcnow().isoformat()}Z",
+        },
+    )
+
+    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
+
+    resp = await github_api.patch(
+        check_runs_updates_uri, preview_api_version="antiope", data={"name": check_run_name, "status": "in_progress"},
+    )
+
+    _LOGGER.info(
+        f"on_pr_open_or_sync: working on PR %s: sleeping a random time between 5 and 15 seconds...",
+        pull_request["html_url"],
+    )
+
+    timeDelay = random.randrange(5, 15)
+    time.sleep(timeDelay)
+
+    await github_api.patch(
+        check_runs_updates_uri,
+        preview_api_version="antiope",
+        data={
+            "name": check_run_name,
+            "status": "completed",
+            "conclusion": "neutral",
+            "completed_at": f"{datetime.utcnow().isoformat()}Z",
+            "output": {
+                "title": "Thoth's Advise",
+                "text": "Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
+                "summary": "This is a Developer Preview Service.\n"
+                f"Id exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
+                f"amet. Ea velit commodo magna incididunt sint eiusmod excepteur quis. Commodo est culpa"
+                f"culpa do commodo. Lorem minim consequat exercitation culpa sint mollit minim veniam"
+                f"id Lorem fugiat tempor duis.",
+            },
+        },
+    )
+
+    _LOGGER.info(
+        f"on_pr_open_or_sync: working on PR %s: finished with `thamos advise`", pull_request["html_url"],
+    )
+
+
 # We simply extend the GitHub Event set for our use case ;)
 @process_event("thoth_thamos_advise", action="finished")
 @process_webhook_payload
@@ -81,7 +156,5 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt GitHub App",
-        version=get_version_from_scm_tag(root="./", relative_to=__file__),
-        url="https://github.com/apps/qeb-hwt",
+        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
     )
