@@ -40,7 +40,7 @@ spec:
             - containerPort: 8080
               protocol: TCP
         - envFrom:
-          - configMapRef:
+            - configMapRef:
                 name: ultrahook-configmap
           image: ultrahook:latest
           imagePullPolicy: Always
