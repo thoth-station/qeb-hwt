@@ -23,41 +23,41 @@ objects:
       name: qeb-hwt
       labels:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
       annotations:
         thoth-station.ninja/template-version: 0.1.0-dev
     spec:
       to:
         kind: Service
-        name: webhook-recevier
+        name: webhook-receiver
 
   - kind: Service
     apiVersion: v1
     metadata:
-      name: webhook-recevier
+      name: webhook-receiver
       labels:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
       annotations:
         thoth-station.ninja/template-version: 0.1.0-dev
     spec:
       ports:
-        - name: webhook-recevier
+        - name: webhook-receiver
           port: 8080
           protocol: TCP
           targetPort: 8080
       selector:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
       type: ClusterIP
 
   - kind: DeploymentConfig
     apiVersion: apps.openshift.io/v1
     metadata:
-      name: qeb-hwt-webhook-recevier
+      name: qeb-hwt-webhook-receiver
       labels:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
       annotations:
         thoth-station.ninja/template-version: 0.1.0-dev
     spec:
@@ -65,18 +65,18 @@ objects:
       revisionHistoryLimit: 4
       selector:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
       template:
         metadata:
           labels:
             app: qeb-hwt
-            component: webhook-recevier
+            component: webhook-receiver
           annotations:
             thoth-station.ninja/template-version: 0.1.0-dev
         spec:
           containers:
-            - name: webhook-recevier
-              image: qeb-hwt-webhook-recevier:latest
+            - name: webhook-receiver
+              image: qeb-hwt-webhook-receiver:latest
               env:
                 - name: ENV
                   value: dev
@@ -108,10 +108,10 @@ objects:
           imageChangeParams:
             automatic: true
             containerNames:
-              - webhook-recevier
+              - webhook-receiver
             from:
               kind: ImageStreamTag
-              name: qeb-hwt-webhook-recevier:latest
+              name: qeb-hwt-webhook-receiver:latest
         - type: ImageChange
           imageChangeParams:
             automatic: true

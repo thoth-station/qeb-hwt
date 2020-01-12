@@ -47,17 +47,17 @@ objects:
   - kind: BuildConfig
     apiVersion: build.openshift.io/v1
     metadata:
-      name: qeb-hwt-webhook-recevier
+      name: qeb-hwt-webhook-receiver
       labels:
         app: qeb-hwt
-        component: webhook-recevier
+        component: webhook-receiver
     spec:
       successfulBuildsHistoryLimit: 2
       failedBuildsHistoryLimit: 5
       output:
         to:
           kind: ImageStreamTag
-          name: qeb-hwt-webhook-recevier:latest
+          name: qeb-hwt-webhook-receiver:latest
       source:
         type: Git
         git:
