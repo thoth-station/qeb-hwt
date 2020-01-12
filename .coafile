@@ -1,8 +1,8 @@
 [all]
 bears = LineCountBear, FilenameBear
 files = **.py, **.yaml, **.md
-file_naming_convention = snake
-ignore = **/__pycache__/**, **/__pycache__, __pycache__, __pycache__/**, **/*.pyc, *.pyc
+file_naming_convention = camel
+ignore = **/__pycache__/**, **/__pycache__, __pycache__, __pycache__/**, **/*.pyc, *.pyc, .github/**
 max_lines_per_file = 1000
 max_line_length = 120
 
