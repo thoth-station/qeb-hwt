@@ -74,7 +74,7 @@ async def on_install(
 
 @process_event_actions("pull_request", {"opened", "reopened", "synchronize", "edited"})
 @process_webhook_payload
-async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender, organization, installation, **kwargs):
+async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender, installation, **kwargs):
     """React to an opened or changed PR event.
 
     Send a status update to GitHub via Checks API.
