@@ -47,6 +47,8 @@ _LOGGER = logging.getLogger("aicoe.sesheta")
 _LOGGER.info(f"Qeb-Hwt GitHub App, v{qeb_hwt_version}")
 logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
+CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
+
 
 @process_event("ping")
 @process_webhook_payload
@@ -83,8 +85,6 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
-    check_run_name = "Thoth: Advise (Developer Preview)"
-
     pr_head_sha = pull_request["merge_commit_sha"]
     if pr_head_sha is None:
         pr_head_sha = pull_request["head"]["sha"]
@@ -97,7 +97,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         check_runs_base_uri,
         preview_api_version="antiope",
         data={
-            "name": check_run_name,
+            "name": CHECK_RUN_NAME,
             "head_sha": pr_head_sha,
             "status": "queued",
             "started_at": f"{datetime.utcnow().isoformat()}Z",
@@ -107,7 +107,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
 
     resp = await github_api.patch(
-        check_runs_updates_uri, preview_api_version="antiope", data={"name": check_run_name, "status": "in_progress"},
+        check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
     )
 
     _LOGGER.info(
@@ -122,7 +122,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         check_runs_updates_uri,
         preview_api_version="antiope",
         data={
-            "name": check_run_name,
+            "name": CHECK_RUN_NAME,
             "status": "completed",
             "conclusion": "neutral",
             "completed_at": f"{datetime.utcnow().isoformat()}Z",
@@ -146,9 +146,43 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 # We simply extend the GitHub Event set for our use case ;)
 @process_event("thoth_thamos_advise", action="finished")
 @process_webhook_payload
-async def on_thamos_workflow_finished(*, action, analysis_id, repo_url, fetch_ref_spec, installation, **kwargs):
+async def on_thamos_workflow_finished(
+    *, action, analysis_id, repo_url, fetch_ref_spec, installation, check_run_id, **kwargs
+):
     """Advise workflow has finished, now we need to send a check-run to the PR."""
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
+
+    github_api = RUNTIME_CONTEXT.app_installation_client
+
+    # TODO: get the check-run id
+    # check_runs_updates_uri = f'{repo_url}/check-runs/{check_run_id}'
+
+    # TODO: get advise result and patch the check-run
+    """
+        await github_api.patch(
+        check_runs_updates_uri,
+        preview_api_version="antiope",
+        data={
+            "name": CHECK_RUN_NAME,
+            "status": "completed",
+            "conclusion": "neutral",
+            "completed_at": f"{datetime.utcnow().isoformat()}Z",
+            "output": {
+                "title": "Thoth's Advise",
+                "text": "Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
+                "summary": "This is a Developer Preview Service.\n"
+                f"Id exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
+                f"amet. Ea velit commodo magna incididunt sint eiusmod excepteur quis. Commodo est culpa"
+                f"culpa do commodo. Lorem minim consequat exercitation culpa sint mollit minim veniam"
+                f"id Lorem fugiat tempor duis.",
+            },
+        },
+    )
+
+    _LOGGER.info(
+        f"on_pr_open_or_sync: working on PR %s: finished with `thamos advise`", pull_request["html_url"],
+    )
+    """
 
 
 if __name__ == "__main__":
