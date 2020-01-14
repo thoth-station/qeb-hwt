@@ -146,9 +146,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 # We simply extend the GitHub Event set for our use case ;)
 @process_event("thoth_thamos_advise", action="finished")
 @process_webhook_payload
-async def on_thamos_workflow_finished(
-    *, action, analysis_id, repo_url, fetch_ref_spec, installation, check_run_id, **kwargs
-):
+async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, adviser_result, **kwargs):
     """Advise workflow has finished, now we need to send a check-run to the PR."""
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
 
