@@ -142,8 +142,9 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
             "completed_at": f"{datetime.utcnow().isoformat()}Z",
             "output": {
                 "title": "Thoth's Advise",
-                "text": "Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
-                "summary": "This is a Developer Preview Service.\n"
+                "text": "This text goes into the details section of the Check.\n\n"
+                f"Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
+                "summary": "This is a Developer Preview Service.\n\n"
                 f"Id exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
                 f"amet. Ea velit commodo magna incididunt sint eiusmod excepteur quis. Commodo est culpa"
                 f"culpa do commodo. Lorem minim consequat exercitation culpa sint mollit minim veniam"
