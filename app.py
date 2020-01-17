@@ -18,15 +18,20 @@
 """This is Qeb-Hwt GitHub App webhook receiver."""
 
 import os
-import asyncio
-import pathlib
+
+import json
 import logging
+import pathlib
 import random
+import re
 import time
 
-from datetime import datetime
+import aiohttp
+import asyncio
 
 import gidgethub
+
+from datetime import datetime
 
 from octomachinery.app.server.runner import run as run_app
 from octomachinery.app.routing import process_event_actions, process_event
@@ -34,11 +39,14 @@ from octomachinery.app.routing.decorators import process_webhook_payload
 from octomachinery.app.runtime.context import RUNTIME_CONTEXT
 from octomachinery.github.config.app import GitHubAppIntegrationConfig
 from octomachinery.github.api.app_client import GitHubApp
+from octomachinery.github.api.raw_client import RawGitHubAPI
 from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
+
+from urllib.parse import urljoin
 
 
 init_logging()
@@ -49,6 +57,9 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
+ADVISE_API_URL = os.getenv(
+    "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/")
+
 
 @process_event("ping")
 @process_webhook_payload
@@ -56,9 +67,11 @@ async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
     app_id = hook["app_id"]
 
-    _LOGGER.info("Processing ping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen)
+    _LOGGER.info(
+        "Processing ping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen)
 
-    _LOGGER.info("GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app)
+    _LOGGER.info("GitHub App from context in ping handler: %s",
+                 RUNTIME_CONTEXT.github_app)
 
 
 @process_event("integration_installation", action="created")
@@ -81,7 +94,8 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     Send a status update to GitHub via Checks API.
     """
-    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
+    _LOGGER.info(
+        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
@@ -134,35 +148,79 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
     """Advise workflow has finished, now we need to send a check-run to the PR."""
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
 
-    github_api = RUNTIME_CONTEXT.app_installation_client
+    github_api: RawGitHubAPI = RUNTIME_CONTEXT.app_installation_client
 
-    check_runs_updates_uri = f"{repo_url}/check-runs/{check_run_id}"
-    analysis_id = payload["analysis-id"]
+    repo = repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
+    check_runs_url = f"repos/{repo}/check-runs/{check_run_id}"
 
-    # TODO: get advise result by `analysis_id` and patch the check-run
+    conclusion: str
+    justification: str
+
+    report: str = "No report has been provided."
+
+    async with aiohttp.ClientSession() as session:
+        analysis_id: str = payload["analysis_id"]
+
+        advise_url = urljoin(ADVISE_API_URL, analysis_id)
+
+        async with session.get(advise_url) as response:
+            if response.status != 200:
+                conclusion = "failure"
+                justification = "Could not retrieve analysis results."
+            else:
+                adviser_payload: dict = await response.json()
+
+                adviser_result: dict = adviser_payload["result"]
+                if adviser_result["error"]:
+                    conclusion = "failure"
+
+                    error_msg: str = adviser_result["error_msg"]
+                    justification = f"Analysis has encountered errors."
+                else:
+                    conclusion = "success"
+
+                    check_run: dict = await github_api.getitem(
+                        check_runs_url,
+                        preview_api_version="antiope"
+                    )
+                    pull_number: int = check_run["pull_requests"][0]["number"]
+                    pull_url: str = f"https://github.com/{repo}/pull/{pull_number}"
+
+                    adviser_report: dict = adviser_result["report"]
+                    justification = (
+                        f"Analysis of <a href=\"{pull_url}\">#{pull_number}</a> "
+                        "finished successfully.\n\n"
+                    )
+
+                    report = json.dumps(adviser_report, indent=2)
+                    # a hack to display indentation spaces in the resulting HTML
+                    report = re.sub(
+                        '\n {2,}', lambda m: '\n' + '&ensp;' * (len(m.group().strip('\n'))), report)
+
     await github_api.patch(
-        check_runs_updates_uri,
+        check_runs_url,
         preview_api_version="antiope",
         data={
             "name": CHECK_RUN_NAME,
             "status": "completed",
-            "conclusion": "neutral",
+            "conclusion": conclusion,
             "completed_at": f"{datetime.utcnow().isoformat()}Z",
+            "details_url": advise_url,
+            "external_id": analysis_id,
             "output": {
                 "title": "Thoth's Advise",
-                "text": "This text goes into the details section of the Check.\n\n"
-                f"Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
-                "summary": "This is a Developer Preview Service.\n\n"
-                f"Id exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
-                f"amet. Ea velit commodo magna incididunt sint eiusmod excepteur quis. Commodo est culpa"
-                f"culpa do commodo. Lorem minim consequat exercitation culpa sint mollit minim veniam"
-                f"id Lorem fugiat tempor duis.",
+                "text": f"Analysis report:\n{report}",
+                "summary": (
+                    f"Thoth's adviser finished with conclusion: '{conclusion}'\n\n"
+                    f"Justification:\n{justification}\n\n"
+                    "See the report below for more details."
+                )
             },
         },
     )
 
     _LOGGER.info(
-        f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_runs_updates_uri,
+        f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id,
     )
 
 
