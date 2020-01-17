@@ -1,0 +1,12 @@
+{
+    "action": "finished",
+    "installation": {
+        "id": 6181026
+    },
+    "repo_url": "https://api.github.com/repos/thoth-station/stub-api",
+    "check_run_id": 394768387,
+    "adviser_result": {
+        "text": "This text goes into the details section of the Check.\n\nUt quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
+        "summary": "This is a Developer Preview Service.\n\nId exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
+    }
+}

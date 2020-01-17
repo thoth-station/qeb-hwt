@@ -85,13 +85,15 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
-    pr_head_sha = pull_request["merge_commit_sha"]
-    if pr_head_sha is None:
-        pr_head_sha = pull_request["head"]["sha"]
-
+    pr_head_sha = pull_request["head"]["sha"]
     repo_url = pull_request["base"]["repo"]["url"]
-
     check_runs_base_uri = f"{repo_url}/check-runs"
+
+    if pr_head_sha is None:
+        _LOGGER.error(f"on_pr_open_or_sync: no Pull Request head sha found, stopped working!")
+        return
+
+    _LOGGER.info(f"on_pr_open_or_sync: PR commit id {pr_head_sha} will be used for check-run")
 
     resp = await github_api.post(
         check_runs_base_uri,
@@ -105,6 +107,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     )
 
     check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
+    _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {resp['id']}")
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
