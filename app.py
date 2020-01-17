@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Qeb-Hwt
+# Qeb-Hwt GitHub App webhook receiver
 # Copyright(C) 2019, 2020 Red Hat, Inc.
 #
 # This program is free software: you can redistribute it and / or modify
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""This is Qeb-Hwt."""
+"""This is Qeb-Hwt GitHub App webhook receiver."""
 
 import os
 import asyncio
@@ -118,6 +118,20 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     timeDelay = random.randrange(5, 15)
     time.sleep(timeDelay)
 
+
+# We simply extend the GitHub Event set for our use case ;)
+@process_event("thoth_thamos_advise", action="finished")
+@process_webhook_payload
+async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, adviser_result, **kwargs):
+    """Advise workflow has finished, now we need to send a check-run to the PR."""
+    _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
+
+    github_api = RUNTIME_CONTEXT.app_installation_client
+
+    # TODO: get the check-run id
+    check_runs_updates_uri = f"{repo_url}/check-runs/{check_run_id}"
+
+    # TODO: get advise result and patch the check-run
     await github_api.patch(
         check_runs_updates_uri,
         preview_api_version="antiope",
@@ -139,48 +153,8 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     )
 
     _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR %s: finished with `thamos advise`", pull_request["html_url"],
+        f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_runs_updates_uri,
     )
-
-
-# We simply extend the GitHub Event set for our use case ;)
-@process_event("thoth_thamos_advise", action="finished")
-@process_webhook_payload
-async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, adviser_result, **kwargs):
-    """Advise workflow has finished, now we need to send a check-run to the PR."""
-    _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
-
-    github_api = RUNTIME_CONTEXT.app_installation_client
-
-    # TODO: get the check-run id
-    # check_runs_updates_uri = f'{repo_url}/check-runs/{check_run_id}'
-
-    # TODO: get advise result and patch the check-run
-    """
-        await github_api.patch(
-        check_runs_updates_uri,
-        preview_api_version="antiope",
-        data={
-            "name": CHECK_RUN_NAME,
-            "status": "completed",
-            "conclusion": "neutral",
-            "completed_at": f"{datetime.utcnow().isoformat()}Z",
-            "output": {
-                "title": "Thoth's Advise",
-                "text": "Ut quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
-                "summary": "This is a Developer Preview Service.\n"
-                f"Id exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
-                f"amet. Ea velit commodo magna incididunt sint eiusmod excepteur quis. Commodo est culpa"
-                f"culpa do commodo. Lorem minim consequat exercitation culpa sint mollit minim veniam"
-                f"id Lorem fugiat tempor duis.",
-            },
-        },
-    )
-
-    _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR %s: finished with `thamos advise`", pull_request["html_url"],
-    )
-    """
 
 
 if __name__ == "__main__":

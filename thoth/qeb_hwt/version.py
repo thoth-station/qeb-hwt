@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# project template
+# Qeb-Hwt GitHub App webhook receiver
 # Copyright(C) 2019, 2020 Red Hat, Inc.
 #
 # This program is free software: you can redistribute it and / or modify
@@ -17,4 +17,4 @@
 
 """This file carries the version of Qeb-Hwt."""
 
-__version__ = "0.1.0-dev"
+__version__ = "0.2.0-dev"
