@@ -106,8 +106,13 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         },
     )
 
-    check_runs_updates_uri = f'{check_runs_base_uri}/{resp["id"]:d}'
-    _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {resp['id']}")
+    check_run_id = int(resp["id"])  # TODO do we need some marshaling here?
+
+    check_runs_updates_uri = f"{check_runs_base_uri}/{check_run_id}"
+    _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
+
+    # TODO call out to user-api to initiate the thamos advise workflow
+    # we need to pass thru the installation_id, repo_url and check_run_id
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
@@ -125,16 +130,16 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 # We simply extend the GitHub Event set for our use case ;)
 @process_event("thoth_thamos_advise", action="finished")
 @process_webhook_payload
-async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, adviser_result, **kwargs):
+async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, payload, **kwargs):
     """Advise workflow has finished, now we need to send a check-run to the PR."""
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
-    # TODO: get the check-run id
     check_runs_updates_uri = f"{repo_url}/check-runs/{check_run_id}"
+    analysis_id = payload["analysis-id"]
 
-    # TODO: get advise result and patch the check-run
+    # TODO: get advise result by `analysis_id` and patch the check-run
     await github_api.patch(
         check_runs_updates_uri,
         preview_api_version="antiope",

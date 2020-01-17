@@ -15,5 +15,5 @@ curl -X POST -v -k http://qeb-hwt-aicoe-prod-bots.cloud.paas.psi.redhat.com/ -d 
         "text": "This text goes into the details section of the Check.\n\nUt quis occaecat commodo incididunt aliquip aliquip occaecat sit anim irure.",
         "summary": "This is a Developer Preview Service.\n\nId exercitation cillum ex labore. Culpa culpa minim aute ad nulla nostrud elit"
     }
-}' -H 'X-GitHub-Event: thoth_thamos_advise' -H 'X-GitHub-Delivery: random_uuid' -H 'Content-Type: application/json' -H 'X-Hub-Signature: sha1=973e2b82c196a1cef0cce179381201896a8ec8f1'
+}' -H 'X-GitHub-Event: thoth_thamos_advise' -H 'X-GitHub-Delivery: random_uuid' -H 'Content-Type: application/json' -H 'X-Hub-Signature: sha1=bd78243d3380730cdf648426ad504b5bdffe9ef9'
 ```
