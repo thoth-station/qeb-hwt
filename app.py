@@ -43,7 +43,9 @@ from octomachinery.github.api.raw_client import RawGitHubAPI
 from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
+from thoth.common import WorkflowManager
 
+from thoth.qeb_hwt.checks import ThamosAdviseCheckRun
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
 from urllib.parse import urljoin
@@ -95,12 +97,14 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     Send a status update to GitHub via Checks API.
     """
     _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
+        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}: %s", action)
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
     pr_head_sha = pull_request["head"]["sha"]
     repo_url = pull_request["base"]["repo"]["url"]
+    repo_html_url = pull_request["base"]["repo"]["html_url"]
+
     check_runs_base_uri = f"{repo_url}/check-runs"
 
     if pr_head_sha is None:
@@ -120,25 +124,49 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         },
     )
 
-    check_run_id = int(resp["id"])  # TODO do we need some marshaling here?
+    check_run_id: int = resp["id"]
 
-    check_runs_updates_uri = f"{check_runs_base_uri}/{check_run_id}"
-    _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
-
-    # TODO call out to user-api to initiate the thamos advise workflow
-    # we need to pass thru the installation_id, repo_url and check_run_id
+    _submit_thamos_workflow(
+        check_run_id,
+        repo_url=repo_html_url,
+        revision=pr_head_sha,
+        installation=installation
+    )
 
     resp = await github_api.patch(
-        check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
+        f"{check_runs_base_uri}/{check_run_id}", preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
     )
 
     _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR %s: sleeping a random time between 5 and 15 seconds...",
+        f"on_pr_open_or_sync: working on PR %s: in_progress",
         pull_request["html_url"],
     )
 
-    timeDelay = random.randrange(5, 15)
-    time.sleep(timeDelay)
+
+def _submit_thamos_workflow(check_run_id: int, repo_url: str, revision: str, installation: int) -> str:
+    """Submit Thamos Advise Workflow.
+
+    :returns: int, workflow ID
+    """
+    mgr = WorkflowManager(openshift_config={
+        "kubernetes_verify_tls": False
+    })
+    api = mgr.api
+
+    workflow_parameters = {
+        "check_run_id": str(check_run_id),
+        "installation": str(installation),
+        "repo_url": repo_url,
+        "revision": revision,
+    }
+
+    wf = ThamosAdviseCheckRun()
+    wf.name = f"{wf.metadata.generate_name}{check_run_id}"
+
+    # TODO: Fix the namespace
+    workflow_id: str = wf.submit(api, "macermak-thoth-dev", parameters=workflow_parameters)
+
+    return workflow_id
 
 
 # We simply extend the GitHub Event set for our use case ;)
