@@ -8,7 +8,7 @@ click = "*"
 aiohttp = "<4.0"
 octomachinery = "*"
 thoth-common = "*"
-argo-workflows = "*"
+argo-workflows-sdk = "*"
 
 [dev-packages]
 black = "*"
