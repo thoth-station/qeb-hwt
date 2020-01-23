@@ -43,9 +43,7 @@ from octomachinery.github.api.raw_client import RawGitHubAPI
 from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
-from thoth.common import WorkflowManager
 
-from thoth.qeb_hwt.checks import ThamosAdviseCheckRun
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
 from urllib.parse import urljoin
@@ -60,7 +58,8 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
 ADVISE_API_URL = os.getenv(
-    "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/")
+    "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",
+)
 
 
 @process_event("ping")
@@ -70,10 +69,13 @@ async def on_ping(*, hook, hook_id, zen):
     app_id = hook["app_id"]
 
     _LOGGER.info(
-        "Processing ping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen)
+        "Processing ping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen,
+    )
 
-    _LOGGER.info("GitHub App from context in ping handler: %s",
-                 RUNTIME_CONTEXT.github_app)
+    _LOGGER.info(
+        "GitHub App from context in ping handler: %s",
+        RUNTIME_CONTEXT.github_app,
+    )
 
 
 @process_event("integration_installation", action="created")
@@ -97,14 +99,13 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     Send a status update to GitHub via Checks API.
     """
     _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}: %s", action)
+        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}",
+    )
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
     pr_head_sha = pull_request["head"]["sha"]
     repo_url = pull_request["base"]["repo"]["url"]
-    repo_html_url = pull_request["base"]["repo"]["html_url"]
-
     check_runs_base_uri = f"{repo_url}/check-runs"
 
     if pr_head_sha is None:
@@ -124,49 +125,25 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         },
     )
 
-    check_run_id: int = resp["id"]
+    check_run_id = int(resp["id"])  # TODO do we need some marshaling here?
 
-    _submit_thamos_workflow(
-        check_run_id,
-        repo_url=repo_html_url,
-        revision=pr_head_sha,
-        installation=installation
-    )
+    check_runs_updates_uri = f"{check_runs_base_uri}/{check_run_id}"
+    _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
+
+    # TODO call out to user-api to initiate the thamos advise workflow
+    # we need to pass thru the installation_id, repo_url and check_run_id
 
     resp = await github_api.patch(
-        f"{check_runs_base_uri}/{check_run_id}", preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
+        check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
     )
 
     _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR %s: in_progress",
+        f"on_pr_open_or_sync: working on PR %s: sleeping a random time between 5 and 15 seconds...",
         pull_request["html_url"],
     )
 
-
-def _submit_thamos_workflow(check_run_id: int, repo_url: str, revision: str, installation: int) -> str:
-    """Submit Thamos Advise Workflow.
-
-    :returns: int, workflow ID
-    """
-    mgr = WorkflowManager(openshift_config={
-        "kubernetes_verify_tls": False
-    })
-    api = mgr.api
-
-    workflow_parameters = {
-        "check_run_id": str(check_run_id),
-        "installation": str(installation),
-        "repo_url": repo_url,
-        "revision": revision,
-    }
-
-    wf = ThamosAdviseCheckRun()
-    wf.name = f"{wf.metadata.generate_name}{check_run_id}"
-
-    # TODO: Fix the namespace
-    workflow_id: str = wf.submit(api, "macermak-thoth-dev", parameters=workflow_parameters)
-
-    return workflow_id
+    timeDelay = random.randrange(5, 15)
+    time.sleep(timeDelay)
 
 
 # We simply extend the GitHub Event set for our use case ;)
@@ -209,7 +186,7 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
 
                     check_run: dict = await github_api.getitem(
                         check_runs_url,
-                        preview_api_version="antiope"
+                        preview_api_version="antiope",
                     )
                     pull_number: int = check_run["pull_requests"][0]["number"]
                     pull_url: str = f"https://github.com/{repo}/pull/{pull_number}"
@@ -223,7 +200,8 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
                     report = json.dumps(adviser_report, indent=2)
                     # a hack to display indentation spaces in the resulting HTML
                     report = re.sub(
-                        '\n {2,}', lambda m: '\n' + '&ensp;' * (len(m.group().strip('\n'))), report)
+                        '\n {2,}', lambda m: '\n' + '&ensp;' * (len(m.group().strip('\n'))), report,
+                    )
 
     await github_api.patch(
         check_runs_url,
@@ -242,7 +220,7 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
                     f"Thoth's adviser finished with conclusion: '{conclusion}'\n\n"
                     f"Justification:\n{justification}\n\n"
                     "See the report below for more details."
-                )
+                ),
             },
         },
     )
