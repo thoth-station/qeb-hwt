@@ -43,6 +43,7 @@ from octomachinery.github.api.raw_client import RawGitHubAPI
 from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
+from thoth.common import WorkflowManager
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
@@ -60,6 +61,8 @@ CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 ADVISE_API_URL = os.getenv(
     "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",
 )
+
+THOTH_HOST = "khemenu.thoth-station.ninja"
 
 
 @process_event("ping")
@@ -130,8 +133,12 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     check_runs_updates_uri = f"{check_runs_base_uri}/{check_run_id}"
     _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
 
-    # TODO call out to user-api to initiate the thamos advise workflow
-    # we need to pass thru the installation_id, repo_url and check_run_id
+    _submit_thamos_workflow(
+        check_run_id,
+        repo_url=repo_url,
+        revision=pr_head_sha,
+        installation=installation
+    )
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
@@ -144,6 +151,35 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     timeDelay = random.randrange(5, 15)
     time.sleep(timeDelay)
+
+
+def _submit_thamos_workflow(check_run_id: int, repo_url: str, revision: str, installation: int) -> str:
+    """Submit Thamos Advise Workflow.
+    :returns: int, workflow ID
+    """
+    mgr = WorkflowManager(openshift_config={
+        "kubernetes_verify_tls": False
+    })
+
+    template_parameters = {}
+    template_parameters["EVENT_ID"] = f"{int(datetime.now().timestamp())}"
+    template_parameters["THOTH_HOST"] = THOTH_HOST
+    template_parameters["CHECK_RUN_ID"] = str(check_run_id)
+    template_parameters["REPO_URL"] = repo_url
+    template_parameters["INSTALLATION"] = str(installation)
+    template_parameters["REVISION"] = revision
+
+    workflow_parameters = {}
+
+    workflow_id: str = mgr.submit_workflow_from_template(
+        "thoth-infra-stage",
+        label_selector="template=qeb-hwt",
+        template_parameters=template_parameters,
+        workflow_parameters=workflow_parameters,
+        workflow_namespace="thoth-backend-stage"
+    )
+
+    return workflow_id
 
 
 # We simply extend the GitHub Event set for our use case ;)

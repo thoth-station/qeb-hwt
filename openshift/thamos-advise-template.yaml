@@ -1,0 +1,135 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: qeb-hwt
+  annotations:
+    description: "Thoth: qeb-hwt Template"
+    openshift.io/display-name: "Thoth: qeb-hwt"
+    version: 0.11.0
+    tags: thoth,ai-stacks,aistacks,qeb-hwt,machinelearning
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to run thamos advise workflow for qeb-hwt Template.
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    template: qeb-hwt
+    app: thoth
+    component: qeb-hwt
+
+
+parameters:
+  - name: EVENT_ID
+    description: "a UUID for the workflow instance"
+    displayName: "Workflow UUID"
+    required: true
+    value: "thoth_thamos_advise"
+  - name: CHECK_RUN_ID
+    description: "a UUID for the workflow instance"
+    displayName: "Workflow UUID"
+    required: true
+  - name: REPO_URL
+    description: "URL of the repo where the PR has been opened."
+    displayName: "URL of the repo"
+    required: true
+  - name: INSTALLATION
+    description: "Installation"
+    displayName: "Installation"
+    required: true
+  - name: REVISION
+    description: "Pull Request head SHA"
+    displayName: "Pull Request head SHA"
+    required: true
+  - name: THOTH_HOST
+    description: "Thoth host to talk to User API"
+    displayName: "Thoth Host"
+    required: true
+  - name: FINISHED_WEBHOOK
+    description: "Finished webhook"
+    displayName: "No transitive dependencies"
+    required: true
+
+objects:
+  - apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: "thamos-advise-check-run-${EVENT_ID}"
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0
+      labels:
+        app: thoth
+        component: qeb-hwt
+    spec:
+      serviceAccountName: argo
+      podGC:
+        strategy: OnWorkflowSuccess
+      volumes:
+        - name: cache
+          emptyDir: {}
+      entrypoint: thoth_thamos_advise
+      arguments:
+        parameters:
+          - name: "EVENT_ID"
+            value: "${EVENT_ID}"
+          - name: "CHECK_RUN_ID"
+            value: "${CHECK_RUN_ID}"
+          - name: "REPO_URL"
+            value: "${REPO_URL}"
+          - name: "INSTALLATION"
+            value: "${INSTALLATION}"
+          - name: "REVISION"
+            value: "${REVISION}"
+          - name: "FINISHED_WEBHOOK"
+            value: "${FINISHED_WEBHOOK}"
+          - name: "THOTH_HOST"
+            value: "${THOTH_HOST}"
+      volumes:
+        - name: workdir
+          emptyDir: {}
+      templates:
+        - name: "thamos-adivse-check-run"
+          archiveLocation:
+            archiveLogs: true
+          dag:
+            tasks:
+              - name: "thoththamosadvise"
+                templateRef:
+                  name: "thoth-thamos-advise"
+                  template: "thamos-advise"
+                arguments:
+                  parameters:
+                    - name: "EVENT_ID"
+                      value: "{{workflow.parameters.EVENT_ID}}"
+                    - name: "CHECK_RUN_ID"
+                      value: "{{workflow.parameters.CHECK_RUN_ID}}"
+                    - name: "REPO_URL"
+                      value: "{{workflow.parameters.REPO_URL}}"
+                    - name: "INSTALLATION"
+                      value: "{{workflow.parameters.INSTALLATION}}"
+                    - name: "REVISION"
+                      value: "{{workflow.parameters.REVISION}}"
+
+              - name: "trigger-finished-webhook"
+                dependencies:
+                  - "thoth_thamos_advise"
+                templateRef:
+                  name: "trigger-finished-webhook"
+                  template: "finished-webhook"
+                arguments:
+                  artifacts:
+                    - name: payload
+                      from: "{{tasks.thoththamosadvise.outputs.artifacts.payload}}"
+                  parameters:
+                    - name: "WORKFLOW_NAME"
+                      value: "thamos-advise-check-run-${EVENT_ID}"
+                    - name: "EVENT_ID"
+                      value: "{{workflow.parameters.EVENT_ID}}"
+                    - name: "CHECK_RUN_ID"
+                      value: "{{workflow.parameters.CHECK_RUN_ID}}"
+                    - name: "REPO_URL"
+                      value: "{{workflow.parameters.REPO_URL}}"
+                    - name: "INSTALLATION"
+                      value: "{{workflow.parameters.INSTALLATION}}"
+                    - name: "REVISION"
+                      value: "{{workflow.parameters.REVISION}}"
+                    - name: "FINISHED_WEBHOOK"
+                      value: "{{workflow.parameters.FINISHED_WEBHOOK}}"
