@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: thamos-advise
+  annotations:
+    thoth-station.ninja/template-version: 0.0.1-dev
+  labels:
+    app: thoth
+    component: thamos-advise
+spec:
+  templates:
+    - name: thamos-advise
+      inputs:
+        parameters:
+          - name: "EVENT_ID"
+          - name: "CHECK_RUN_ID"
+          - name: "REPO_URL"
+          - name: "INSTALLATION"
+          - name: "REVISION"
+          - name: "THOTH_HOST"
+        artifacts:
+        - name: repository
+          path: /mnt/inputs/artifacts/repository
+          git:
+            repo: '{{inputs.parameters.REPO_URL}}'
+            revision: '{{inputs.parameters.REVISION}}'
+      outputs:
+        parameters:
+        - globalName: payload
+          name: payload
+          valueFrom:
+            path: /mnt/outputs/parameters/payload
+      script:
+        command:
+        - python
+        name: thamos-advise
+        image: "quay.io/cermakm/thamos:latest"
+        source: |
+          from thamos.lib import advise_here
+          from thamos.config import config
+
+          config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
+          config.tls_verify = True
+
+          analysis_id = advise_here(
+            reccomedantion_type="STABLE",
+            nowait=True
+          )
+          output = {}
+          output["analysis_id"] = analysis_id
+          payload = json.dumps(output)
+          Path("/mnt/outputs/parameters/payload").write_text(payload)
+        volumeMounts:
+          - name: cache
+            mountPath: /mnt/outputs/parameters
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
