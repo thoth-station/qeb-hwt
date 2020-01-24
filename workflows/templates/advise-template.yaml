@@ -45,7 +45,7 @@ spec:
 
           analysis_id = advise_here(
             reccomedantion_type="STABLE",
-            nowait=True
+            nowait=False
           )
           output = {}
           output["analysis_id"] = analysis_id
