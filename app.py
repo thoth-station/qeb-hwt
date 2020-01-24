@@ -62,6 +62,10 @@ ADVISE_API_URL = os.getenv(
     "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",
 )
 
+USER_API_URL = os.getenv(
+    "USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt/",
+)
+
 THOTH_HOST = "khemenu.thoth-station.ninja"
 
 
@@ -133,53 +137,18 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     check_runs_updates_uri = f"{check_runs_base_uri}/{check_run_id}"
     _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
 
-    _submit_thamos_workflow(
-        check_run_id,
-        repo_url=repo_url,
-        revision=pr_head_sha,
-        installation=installation
-    )
+    data = {
+        "check_run_id": check_run_id,
+        "repo_url": repo_url,
+        "commit_sha": pr_head_sha,
+        "installation_id": installation,
+    }
+    async with aiohttp.ClientSession() as session:
+        session.post(USER_API_URL, json=data)
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
     )
-
-    _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR %s: sleeping a random time between 5 and 15 seconds...",
-        pull_request["html_url"],
-    )
-
-    timeDelay = random.randrange(5, 15)
-    time.sleep(timeDelay)
-
-
-def _submit_thamos_workflow(check_run_id: int, repo_url: str, revision: str, installation: int) -> str:
-    """Submit Thamos Advise Workflow.
-    :returns: int, workflow ID
-    """
-    mgr = WorkflowManager(openshift_config={
-        "kubernetes_verify_tls": False
-    })
-
-    template_parameters = {}
-    template_parameters["EVENT_ID"] = f"{int(datetime.now().timestamp())}"
-    template_parameters["THOTH_HOST"] = THOTH_HOST
-    template_parameters["CHECK_RUN_ID"] = str(check_run_id)
-    template_parameters["REPO_URL"] = repo_url
-    template_parameters["INSTALLATION"] = str(installation)
-    template_parameters["REVISION"] = revision
-
-    workflow_parameters = {}
-
-    workflow_id: str = mgr.submit_workflow_from_template(
-        "thoth-infra-stage",
-        label_selector="template=qeb-hwt",
-        template_parameters=template_parameters,
-        workflow_parameters=workflow_parameters,
-        workflow_namespace="thoth-backend-stage"
-    )
-
-    return workflow_id
 
 
 # We simply extend the GitHub Event set for our use case ;)
