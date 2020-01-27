@@ -144,7 +144,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         "installation_id": installation,
     }
     async with aiohttp.ClientSession() as session:
-        session.post(USER_API_URL, json=data)
+        session.post(USER_API_URL, json=json.dumps(data))
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
