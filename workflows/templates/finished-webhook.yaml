@@ -42,19 +42,6 @@ spec:
           import requests
           import uuid
 
-          class webhook:
-              """Scoped objects injected from scope 'webhook'."""
-
-              @staticmethod
-              def get_signature(data: bytes, key: str) -> str:
-                  if not isinstance(data, bytes):
-                      data = json.dumps(data).encode("UTF-8")
-
-                  secret = key.encode("UTF-8")
-                  signature = hmac.new(secret, data, digestmod="sha1")
-
-                  return signature.hexdigest()
-
           uuid = str(uuid.uuid4())
 
           data = {
@@ -65,7 +52,14 @@ spec:
               "revision": "{{inputs.parameters.REVISION}}",
               "payload": json.loads("{{inputs.artifacts.payload}}"),
           }
-          signature = webhook.get_signature(data, key=os.environ["WEBHOOK_SECRET"])
+
+          key=os.environ["WEBHOOK_SECRET"]
+
+          if not isinstance(data, bytes):
+              data = json.dumps(data).encode("UTF-8")
+
+          secret = key.encode("UTF-8")
+          signature = hmac.new(secret, data, digestmod="sha1")
 
           headers = {
               "Accept": "application/vnd.github.antiope-preview+json",
@@ -73,7 +67,7 @@ spec:
               "User-Agent": "Workflow/{{inputs.parameters.WORKFLOW_NAME}}",
               "X-GitHub-Delivery": uuid,
               "X-GitHub-Event": "{{inputs.parameters.FINISHED_WEBHOOK}}",
-              "X-Hub-Signature": f"sha1={signature}",
+              "X-Hub-Signature": f"sha1={signature.hexdigest()}",
           }
 
           print("Headers:\n", headers)
