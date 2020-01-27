@@ -37,6 +37,8 @@ spec:
         name: thamos-advise
         image: "quay.io/cermakm/thamos:latest"
         source: |
+          import json
+          from pathlib import Path
           from thamos.lib import advise_here
           from thamos.config import config
 
@@ -47,8 +49,7 @@ spec:
             reccomedantion_type="STABLE",
             nowait=False
           )
-          output = {}
-          output["analysis_id"] = analysis_id
+          output = {"analysis_id": analysis_id}
           payload = json.dumps(output)
           Path("/mnt/outputs/parameters/payload").write_text(payload)
         volumeMounts:
