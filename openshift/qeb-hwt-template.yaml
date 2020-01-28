@@ -5,7 +5,7 @@ metadata:
   annotations:
     description: "Thoth: qeb-hwt Template"
     openshift.io/display-name: "Thoth: qeb-hwt"
-    version: 0.11.0
+    version: 0.1.0
     tags: thoth,ai-stacks,aistacks,qeb-hwt,machinelearning
     template.openshift.io/documentation-url: https://github.com/Thoth-Station/
     template.openshift.io/long-description: >
@@ -43,16 +43,12 @@ parameters:
     description: "Thoth host to talk to User API"
     displayName: "Thoth Host"
     required: true
-  - name: FINISHED_WEBHOOK
-    description: "Finished webhook"
-    displayName: "No transitive dependencies"
-    required: true
 
 objects:
   - apiVersion: argoproj.io/v1alpha1
     kind: Workflow
     metadata:
-      generateName: "thamos-advise-check-run-${EVENT_ID}"
+      generateName: "qeb-hwt-thamos-advise-${EVENT_ID}"
       annotations:
         thoth-station.ninja/template-version: 0.1.0
       labels:
@@ -78,20 +74,18 @@ objects:
             value: "${INSTALLATION}"
           - name: "REVISION"
             value: "${REVISION}"
-          - name: "FINISHED_WEBHOOK"
-            value: "${FINISHED_WEBHOOK}"
           - name: "THOTH_HOST"
             value: "${THOTH_HOST}"
       volumes:
         - name: workdir
           emptyDir: {}
       templates:
-        - name: "thamos-adivse-check-run"
+        - name: "thamos-advise"
           archiveLocation:
             archiveLogs: true
           dag:
             tasks:
-              - name: "thoththamosadvise"
+              - name: "thoth-thamos-advise"
                 templateRef:
                   name: "thoth-thamos-advise"
                   template: "thamos-advise"
@@ -107,29 +101,3 @@ objects:
                       value: "{{workflow.parameters.INSTALLATION}}"
                     - name: "REVISION"
                       value: "{{workflow.parameters.REVISION}}"
-
-              - name: "trigger-finished-webhook"
-                dependencies:
-                  - "thoth_thamos_advise"
-                templateRef:
-                  name: "trigger-finished-webhook"
-                  template: "finished-webhook"
-                arguments:
-                  artifacts:
-                    - name: payload
-                      from: "{{tasks.thoththamosadvise.outputs.artifacts.payload}}"
-                  parameters:
-                    - name: "WORKFLOW_NAME"
-                      value: "thamos-advise-check-run-${EVENT_ID}"
-                    - name: "EVENT_ID"
-                      value: "{{workflow.parameters.EVENT_ID}}"
-                    - name: "CHECK_RUN_ID"
-                      value: "{{workflow.parameters.CHECK_RUN_ID}}"
-                    - name: "REPO_URL"
-                      value: "{{workflow.parameters.REPO_URL}}"
-                    - name: "INSTALLATION"
-                      value: "{{workflow.parameters.INSTALLATION}}"
-                    - name: "REVISION"
-                      value: "{{workflow.parameters.REVISION}}"
-                    - name: "FINISHED_WEBHOOK"
-                      value: "{{workflow.parameters.FINISHED_WEBHOOK}}"
