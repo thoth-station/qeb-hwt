@@ -13,14 +13,17 @@ spec:
     - name: thamos-advise
       inputs:
         parameters:
-          - name: "REPO_URL"
+          - name: "GITHUB_EVENT_TYPE"
+          - name: "GITHUB_CHECK_RUN_ID"
+          - name: "GITHUB_INSTALLATION_ID"
+          - name: "ORIGIN"
           - name: "REVISION"
           - name: "THOTH_HOST"
         artifacts:
           - name: repository
             path: /mnt/inputs/artifacts/repository
             git:
-              repo: "{{inputs.parameters.REPO_URL}}"
+              repo: "{{inputs.parameters.ORIGIN}}"
               revision: "{{inputs.parameters.REVISION}}"
       script:
         command:
@@ -38,11 +41,13 @@ spec:
 
           analysis_id = advise_here(
             reccomedantion_type="STABLE",
-            nowait=True
+            nowait=True,
+            github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
+            github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
+            github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
+            origin="{{inputs.parameters.ORIGIN}}",
+            revision="{{inputs.parameters.REVISION}}",
           )
-        volumeMounts:
-          - name: cache
-            mountPath: /mnt/outputs/parameters
         resources:
           limits:
             cpu: 100m

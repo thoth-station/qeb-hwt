@@ -136,10 +136,11 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     _LOGGER.info(f"on_pr_open_or_sync: check_run_id: {check_run_id}")
 
     data = {
-        "check_run_id": check_run_id,
-        "repo_url": repo_url,
-        "commit_sha": pr_head_sha,
-        "installation_id": installation,
+        "github_event_type": "thoth_thamos_advise",
+        "github_check_run_id": check_run_id,
+        "github_installation_id": installation,
+        "origin": repo_url,
+        "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
         session.post(USER_API_URL, json=json.dumps(data))

@@ -17,22 +17,26 @@ metadata:
     component: qeb-hwt
 
 parameters:
-  - name: EVENT_ID
+  - name: WORKFLOW_ID
     description: "a UUID for the workflow instance"
     displayName: "Workflow UUID"
+    required: true
+  - name: GITHUB_EVENT_TYPE
+    description: "GitHub event Type"
+    displayName: "GitHub event Type"
     required: true
     value: "thoth_thamos_advise"
-  - name: CHECK_RUN_ID
-    description: "a UUID for the workflow instance"
-    displayName: "Workflow UUID"
+  - name: GITHUB_CHECK_RUN_ID
+    description: "ID of the check-run that shall carry the thamos advise."
+    displayName: "ID of the check-run"
     required: true
-  - name: REPO_URL
+  - name: GITHUB_INSTALLATION_ID
+    description: "GitHub App Installation ID"
+    displayName: "Installation ID"
+    required: true
+  - name: ORIGIN
     description: "URL of the repo where the PR has been opened."
     displayName: "URL of the repo"
-    required: true
-  - name: INSTALLATION
-    description: "Installation"
-    displayName: "Installation"
     required: true
   - name: REVISION
     description: "Pull Request head SHA"
@@ -47,7 +51,7 @@ objects:
   - apiVersion: argoproj.io/v1alpha1
     kind: Workflow
     metadata:
-      generateName: "qeb-hwt-thamos-advise-${EVENT_ID}"
+      generateName: "qeb-hwt-thamos-advise-${WORKFLOW_ID}"
       annotations:
         thoth-station.ninja/template-version: 0.1.0
       labels:
@@ -60,14 +64,14 @@ objects:
       entrypoint: thoth_thamos_advise
       arguments:
         parameters:
-          - name: "EVENT_ID"
-            value: "${EVENT_ID}"
-          - name: "CHECK_RUN_ID"
-            value: "${CHECK_RUN_ID}"
-          - name: "REPO_URL"
-            value: "${REPO_URL}"
-          - name: "INSTALLATION"
-            value: "${INSTALLATION}"
+          - name: "GITHUB_EVENT_TYPE"
+            value: "${GITHUB_EVENT_TYPE}"
+          - name: "GITHUB_CHECK_RUN_ID"
+            value: "${GITHUB_CHECK_RUN_ID}"
+          - name: "GITHUB_INSTALLATION_ID"
+            value: "${GITHUB_INSTALLATION_ID}"
+          - name: "ORIGIN"
+            value: "${ORIGIN}"
           - name: "REVISION"
             value: "${REVISION}"
           - name: "THOTH_HOST"
@@ -89,13 +93,15 @@ objects:
                   template: "thamos-advise"
                 arguments:
                   parameters:
-                    - name: "EVENT_ID"
-                      value: "{{workflow.parameters.EVENT_ID}}"
-                    - name: "CHECK_RUN_ID"
-                      value: "{{workflow.parameters.CHECK_RUN_ID}}"
-                    - name: "REPO_URL"
-                      value: "{{workflow.parameters.REPO_URL}}"
-                    - name: "INSTALLATION"
-                      value: "{{workflow.parameters.INSTALLATION}}"
+                    - name: "GITHUB_EVENT_TYPE"
+                      value: "{{workflow.parameters.GITHUB_EVENT_TYPE}}"
+                    - name: "GITHUB_CHECK_RUN_ID"
+                      value: "{{workflow.parameters.GITHUB_CHECK_RUN_ID}}"
+                    - name: "GITHUB_INSTALLATION_ID"
+                      value: "{{workflow.parameters.GITHUB_INSTALLATION_ID}}"
+                    - name: "ORIGIN"
+                      value: "{{workflow.parameters.ORIGIN}}"
                     - name: "REVISION"
                       value: "{{workflow.parameters.REVISION}}"
+                    - name: "THOTH_HOST"
+                      value: "{{workflow.parameters.THOTH_HOST}}"
