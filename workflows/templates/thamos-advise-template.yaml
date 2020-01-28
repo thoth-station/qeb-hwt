@@ -4,7 +4,7 @@ kind: WorkflowTemplate
 metadata:
   name: thamos-advise
   annotations:
-    thoth-station.ninja/template-version: 0.0.1-dev
+    thoth-station.ninja/template-version: 0.1.0-dev
   labels:
     app: thoth
     component: thamos-advise
@@ -13,10 +13,7 @@ spec:
     - name: thamos-advise
       inputs:
         parameters:
-          - name: "EVENT_ID"
-          - name: "CHECK_RUN_ID"
           - name: "REPO_URL"
-          - name: "INSTALLATION"
           - name: "REVISION"
           - name: "THOTH_HOST"
         artifacts:
@@ -25,12 +22,6 @@ spec:
           git:
             repo: '{{inputs.parameters.REPO_URL}}'
             revision: '{{inputs.parameters.REVISION}}'
-      outputs:
-        parameters:
-        - globalName: payload
-          name: payload
-          valueFrom:
-            path: /mnt/outputs/parameters/payload
       script:
         command:
         - python
@@ -47,11 +38,8 @@ spec:
 
           analysis_id = advise_here(
             reccomedantion_type="STABLE",
-            nowait=False
+            nowait=True
           )
-          output = {"analysis_id": analysis_id}
-          payload = json.dumps(output)
-          Path("/mnt/outputs/parameters/payload").write_text(payload)
         volumeMounts:
           - name: cache
             mountPath: /mnt/outputs/parameters

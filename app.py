@@ -66,8 +66,6 @@ USER_API_URL = os.getenv(
     "USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt/",
 )
 
-THOTH_HOST = "khemenu.thoth-station.ninja"
-
 
 @process_event("ping")
 @process_webhook_payload
