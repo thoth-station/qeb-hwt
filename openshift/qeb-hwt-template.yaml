@@ -16,7 +16,6 @@ metadata:
     app: thoth
     component: qeb-hwt
 
-
 parameters:
   - name: EVENT_ID
     description: "a UUID for the workflow instance"
@@ -58,9 +57,6 @@ objects:
       serviceAccountName: argo
       podGC:
         strategy: OnWorkflowSuccess
-      volumes:
-        - name: cache
-          emptyDir: {}
       entrypoint: thoth_thamos_advise
       arguments:
         parameters:
@@ -78,6 +74,8 @@ objects:
             value: "${THOTH_HOST}"
       volumes:
         - name: workdir
+          emptyDir: {}
+        - name: cache
           emptyDir: {}
       templates:
         - name: "thamos-advise"

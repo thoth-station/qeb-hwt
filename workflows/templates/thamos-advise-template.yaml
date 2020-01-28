@@ -17,14 +17,14 @@ spec:
           - name: "REVISION"
           - name: "THOTH_HOST"
         artifacts:
-        - name: repository
-          path: /mnt/inputs/artifacts/repository
-          git:
-            repo: '{{inputs.parameters.REPO_URL}}'
-            revision: '{{inputs.parameters.REVISION}}'
+          - name: repository
+            path: /mnt/inputs/artifacts/repository
+            git:
+              repo: "{{inputs.parameters.REPO_URL}}"
+              revision: "{{inputs.parameters.REVISION}}"
       script:
         command:
-        - python
+          - python
         name: thamos-advise
         image: "quay.io/cermakm/thamos:latest"
         source: |
