@@ -32,6 +32,9 @@ import asyncio
 import gidgethub
 
 from datetime import datetime
+from urllib.parse import urljoin
+
+from jaeger_client import Config
 
 from octomachinery.app.server.runner import run as run_app
 from octomachinery.app.routing import process_event_actions, process_event
@@ -47,8 +50,6 @@ from thoth.common import WorkflowManager
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
-from urllib.parse import urljoin
-
 
 init_logging()
 
@@ -58,9 +59,11 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
-ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",)
+# no trailing / !
+ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python",)
+USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
 
-USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt/",)
+tracer = None
 
 
 @process_event("ping")
@@ -103,8 +106,9 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     github_api = RUNTIME_CONTEXT.app_installation_client
 
     pr_head_sha = pull_request["head"]["sha"]
+    base_repo_url = pull_request["base"]["repo"]["url"]
     repo_url = pull_request["head"]["repo"]["html_url"]
-    check_runs_base_uri = f"{repo_url}/check-runs"
+    check_runs_base_uri = f"{base_repo_url}/check-runs"
 
     if pr_head_sha is None:
         _LOGGER.error(f"on_pr_open_or_sync: no Pull Request head sha found, stopped working!")
@@ -117,7 +121,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         preview_api_version="antiope",
         data={
             "name": CHECK_RUN_NAME,
-            "head_shhwta": pr_head_sha,
+            "head_sha": pr_head_sha,
             "status": "queued",
             "started_at": f"{datetime.utcnow().isoformat()}Z",
         },
@@ -131,12 +135,13 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     data = {
         "github_event_type": "thoth_thamos_advise",
         "github_check_run_id": check_run_id,
-        "github_installation_id": installation,
-        "origin": repo_url,
+        "github_installation_id": installation["id"],
+        "origin": base_repo_url,
         "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
-        session.post(USER_API_URL, json=json.dumps(data))
+        resp = await session.post(USER_API_URL, json=json.dumps(data))
+        _LOGGER.info(f"on_pr_open_or_sync: user-api resp: {resp}")
 
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
@@ -224,6 +229,14 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
 if __name__ == "__main__":
     _LOGGER.setLevel(logging.DEBUG)
     _LOGGER.debug("Debug mode turned on")
+
+    config = Config(
+        config={"sampler": {"type": "const", "param": 1,}, "logging": True,},
+        service_name="qeb-hwt-github-app",
+        validate=True,
+    )
+    # this call also sets opentracing.tracer
+    tracer = config.initialize_tracer()
 
     run_app(  # pylint: disable=expression-not-assigned
         name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",

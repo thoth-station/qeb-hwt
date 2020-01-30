@@ -9,6 +9,7 @@ aiohttp = "<4.0"
 octomachinery = "*"
 thoth-common = "*"
 argo-workflows-sdk = "*"
+jaeger-client = "*"
 
 [dev-packages]
 black = "*"
