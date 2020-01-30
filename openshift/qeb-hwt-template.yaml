@@ -61,7 +61,7 @@ objects:
       serviceAccountName: argo
       podGC:
         strategy: OnWorkflowSuccess
-      entrypoint: thoth_thamos_advise
+      entrypoint: qeb-hwt
       arguments:
         parameters:
           - name: "GITHUB_EVENT_TYPE"
@@ -82,14 +82,14 @@ objects:
         - name: cache
           emptyDir: {}
       templates:
-        - name: "thamos-advise"
+        - name: "qeb-hwt"
           archiveLocation:
             archiveLogs: true
           dag:
             tasks:
-              - name: "thoth-thamos-advise"
+              - name: "thamos-advise"
                 templateRef:
-                  name: "thoth-thamos-advise"
+                  name: "thamos-advise"
                   template: "thamos-advise"
                 arguments:
                   parameters:
