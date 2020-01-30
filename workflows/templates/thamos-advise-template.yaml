@@ -27,20 +27,23 @@ spec:
               revision: "{{inputs.parameters.REVISION}}"
       script:
         command:
-          - python
+          - python3
         name: thamos-advise
         image: "quay.io/thoth-station/thamos:v0.8.0-dev"
         source: |
+          import os
           import json
           from pathlib import Path
           from thamos.lib import advise_here
           from thamos.config import config
 
+          os.chdir("/mnt/inputs/artifacts/repository")
+
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
           config.tls_verify = True
 
           analysis_id = advise_here(
-            reccomedantion_type="STABLE",
+            recommendation_type="STABLE",
             nowait=True,
             github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
             github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",

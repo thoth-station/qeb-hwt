@@ -58,13 +58,9 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
-ADVISE_API_URL = os.getenv(
-    "ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",
-)
+ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/",)
 
-USER_API_URL = os.getenv(
-    "USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt/",
-)
+USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt/",)
 
 
 @process_event("ping")
@@ -74,12 +70,11 @@ async def on_ping(*, hook, hook_id, zen):
     app_id = hook["app_id"]
 
     _LOGGER.info(
-        "Processing ping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen,
+        "Processing hwtping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen,
     )
 
     _LOGGER.info(
-        "GitHub App from context in ping handler: %s",
-        RUNTIME_CONTEXT.github_app,
+        "GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app,
     )
 
 
@@ -103,14 +98,12 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     Send a status update to GitHub via Checks API.
     """
-    _LOGGER.info(
-        f"on_pr_open_or_sync: working on PR {pull_request['html_url']}",
-    )
+    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}",)
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
     pr_head_sha = pull_request["head"]["sha"]
-    repo_url = pull_request["base"]["repo"]["url"]
+    repo_url = pull_request["head"]["repo"]["html_url"]
     check_runs_base_uri = f"{repo_url}/check-runs"
 
     if pr_head_sha is None:
@@ -124,7 +117,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         preview_api_version="antiope",
         data={
             "name": CHECK_RUN_NAME,
-            "head_sha": pr_head_sha,
+            "head_shhwta": pr_head_sha,
             "status": "queued",
             "started_at": f"{datetime.utcnow().isoformat()}Z",
         },
@@ -189,23 +182,17 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
                     conclusion = "success"
 
                     check_run: dict = await github_api.getitem(
-                        check_runs_url,
-                        preview_api_version="antiope",
+                        check_runs_url, preview_api_version="antiope",
                     )
                     pull_number: int = check_run["pull_requests"][0]["number"]
                     pull_url: str = f"https://github.com/{repo}/pull/{pull_number}"
 
                     adviser_report: dict = adviser_result["report"]
-                    justification = (
-                        f"Analysis of <a href=\"{pull_url}\">#{pull_number}</a> "
-                        "finished successfully.\n\n"
-                    )
+                    justification = f'Analysis of <a href="{pull_url}">#{pull_number}</a> ' "finished successfully.\n\n"
 
                     report = json.dumps(adviser_report, indent=2)
                     # a hack to display indentation spaces in the resulting HTML
-                    report = re.sub(
-                        '\n {2,}', lambda m: '\n' + '&ensp;' * (len(m.group().strip('\n'))), report,
-                    )
+                    report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
     await github_api.patch(
         check_runs_url,
