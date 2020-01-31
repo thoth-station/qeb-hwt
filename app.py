@@ -34,8 +34,6 @@ import gidgethub
 from datetime import datetime
 from urllib.parse import urljoin
 
-from jaeger_client import Config
-
 from octomachinery.app.server.runner import run as run_app
 from octomachinery.app.routing import process_event_actions, process_event
 from octomachinery.app.routing.decorators import process_webhook_payload
@@ -52,6 +50,7 @@ from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
 
 init_logging()
+
 
 _LOGGER = logging.getLogger("aicoe.sesheta")
 _LOGGER.info(f"Qeb-Hwt GitHub App, v{qeb_hwt_version}")
@@ -229,14 +228,6 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
 if __name__ == "__main__":
     _LOGGER.setLevel(logging.DEBUG)
     _LOGGER.debug("Debug mode turned on")
-
-    config = Config(
-        config={"sampler": {"type": "const", "param": 1,}, "logging": True,},
-        service_name="qeb-hwt-github-app",
-        validate=True,
-    )
-    # this call also sets opentracing.tracer
-    tracer = config.initialize_tracer()
 
     run_app(  # pylint: disable=expression-not-assigned
         name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
