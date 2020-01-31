@@ -139,7 +139,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
-        resp = await session.post(USER_API_URL, json=json.dump(data))
+        resp = await session.post(USER_API_URL, json=json.dumps(data))
         _LOGGER.info(f"on_pr_open_or_sync: user-api resp: {resp}")
 
     resp = await github_api.patch(
