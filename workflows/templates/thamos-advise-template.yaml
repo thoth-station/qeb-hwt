@@ -34,8 +34,13 @@ spec:
           import os
           import json
           from pathlib import Path
+
+          from thoth.common import init_logging
+
           from thamos.lib import advise_here
           from thamos.config import config
+
+          init_logging()
 
           os.chdir("/mnt/inputs/artifacts/repository")
 
