@@ -12,8 +12,8 @@ curl -X POST -v -k http://qeb-hwt-aicoe-prod-bots.cloud.paas.psi.redhat.com/ -d 
     "repo_url": "https://api.github.com/repos/thoth-station/Qeb-Hwt",
     "check_run_id": 394815661,
     "payload": {
-        "analysis-id": "adviser-f1d5d010"
+        "analysis_id": "adviser-f1d5d010"
     }
 }
-' -H 'X-GitHub-Event: thoth_thamos_advise' -H 'X-GitHub-Delivery: random_uuid' -H 'Content-Type: application/json' -H 'X-Hub-Signature: sha1=bd78243d3380730cdf648426ad504b5bdffe9ef9'
+' -H 'X-GitHub-Event: thoth_thamos_advise' -H 'X-GitHub-Delivery: random_uuid' -H 'Content-Type: application/json' -H 'X-Hub-Signature: sha1=some_sha'
 ```
