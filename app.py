@@ -155,6 +155,7 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
 
     github_api: RawGitHubAPI = RUNTIME_CONTEXT.app_installation_client
+    _LOGGER.info("on_thamos_workflow_finished: github_api=%s", github_api)
 
     repo = repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
     check_runs_url = f"repos/{repo}/check-runs/{check_run_id}"
@@ -198,27 +199,30 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
                     # a hack to display indentation spaces in the resulting HTML
                     report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
-    await github_api.patch(
-        check_runs_url,
-        preview_api_version="antiope",
-        data={
-            "name": CHECK_RUN_NAME,
-            "status": "completed",
-            "conclusion": conclusion,
-            "completed_at": f"{datetime.utcnow().isoformat()}Z",
-            "details_url": advise_url,
-            "external_id": analysis_id,
-            "output": {
-                "title": "Thoth's Advise",
-                "text": f"Analysis report:\n{report}",
-                "summary": (
-                    f"Thoth's adviser finished with conclusion: '{conclusion}'\n\n"
-                    f"Justification:\n{justification}\n\n"
-                    "See the report below for more details."
-                ),
+    try:
+        await github_api.patch(
+            check_runs_url,
+            preview_api_version="antiope",
+            data={
+                "name": CHECK_RUN_NAME,
+                "status": "completed",
+                "conclusion": conclusion,
+                "completed_at": f"{datetime.utcnow().isoformat()}Z",
+                "details_url": advise_url,
+                "external_id": analysis_id,
+                "output": {
+                    "title": "Thoth's Advise",
+                    "text": f"Analysis report:\n{report}",
+                    "summary": (
+                        f"Thoth's adviser finished with conclusion: '{conclusion}'\n\n"
+                        f"Justification:\n{justification}\n\n"
+                        "See the report below for more details."
+                    ),
+                },
             },
-        },
-    )
+        )
+    except gidgethub.BadRequest as exc:
+        _LOGGER.error(exc)
 
     _LOGGER.info(
         f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id,
