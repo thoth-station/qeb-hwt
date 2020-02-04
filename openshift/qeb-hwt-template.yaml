@@ -51,14 +51,14 @@ objects:
   - apiVersion: argoproj.io/v1alpha1
     kind: Workflow
     metadata:
-      generateName: "qeb-hwt-thamos-advise-${WORKFLOW_ID}"
+      generateName: "qeb-hwt${WORKFLOW_ID}"
       annotations:
         thoth-station.ninja/template-version: 0.1.0
       labels:
         app: thoth
         component: qeb-hwt
     spec:
-      serviceAccountName: argo
+      serviceAccountName: user-api
       podGC:
         strategy: OnWorkflowSuccess
       entrypoint: qeb-hwt
