@@ -58,7 +58,7 @@ objects:
         app: thoth
         component: qeb-hwt
     spec:
-      serviceAccountName: user-api
+      serviceAccountName: argo
       podGC:
         strategy: OnWorkflowSuccess
       entrypoint: qeb-hwt
