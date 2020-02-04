@@ -113,6 +113,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         _LOGGER.error(f"on_pr_open_or_sync: no Pull Request head sha found, stopped working!")
         return
 
+    _LOGGER.info(f"on_pr_open_or_sync: repo_url {repo_url} will be used for check-run")
     _LOGGER.info(f"on_pr_open_or_sync: PR commit id {pr_head_sha} will be used for check-run")
 
     resp = await github_api.post(
@@ -135,7 +136,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         "github_event_type": "thoth_thamos_advise",
         "github_check_run_id": check_run_id,
         "github_installation_id": installation["id"],
-        "origin": base_repo_url,
+        "origin": repo_url,
         "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
