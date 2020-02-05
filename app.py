@@ -58,8 +58,8 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
-# no trailing / !
-ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python",)
+# no trailing / !https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser-1580927361
+ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id",)
 USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
 
 tracer = None
@@ -171,8 +171,10 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
     async with aiohttp.ClientSession() as session:
         analysis_id: str = payload["analysis_id"]
+        _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
 
         advise_url = urljoin(ADVISE_API_URL, analysis_id)
+        _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
 
         async with session.get(advise_url) as response:
             if response.status != 200:
