@@ -1,0 +1,85 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: qeb-hwt-buildconfig
+  annotations:
+    description: "BuildConfigs for Thoth Service: thamos advise and Ultrahook"
+    openshift.io/display-name: "Thoth Service: thamos advise"
+    version: 0.1.0-dev
+    tags: thoth,github,app,thamos
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to deploy Qeb-Hwt, the backend
+      componets of https://github.com/marketplace/qeb-hwt
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    template: qeb-hwt-buildconfig
+    app: qeb-hwt
+
+objects:
+  - kind: BuildConfig
+    apiVersion: build.openshift.io/v1
+    metadata:
+      name: ultrahook
+      labels:
+        app: qeb-hwt
+        component: ultrahook
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0-dev
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ultrahook:latest
+      runPolicy: Serial
+      strategy:
+        type: Docker
+      source:
+        type: Dockerfile
+        dockerfile: |
+          FROM registry.access.redhat.com/ubi8/ruby-25
+          RUN gem install --no-ri --no-rdoc ultrahook
+          CMD ultrahook \
+            $ULTRAHOOK_SUBDOMAIN $ULTRAHOOK_TARGET_HOST:$ULTRAHOOK_TARGET_PORT
+      triggers:
+        - type: ConfigChange
+
+  - kind: BuildConfig
+    apiVersion: build.openshift.io/v1
+    metadata:
+      name: qeb-hwt-webhook-receiver
+      labels:
+        app: qeb-hwt
+        component: webhook-receiver
+    spec:
+      successfulBuildsHistoryLimit: 2
+      failedBuildsHistoryLimit: 5
+      output:
+        to:
+          kind: ImageStreamTag
+          name: qeb-hwt-webhook-receiver:latest
+      source:
+        type: Git
+        git:
+          ref: master
+          uri: https://github.com/thoth-station/Qeb-Hwt.git
+      strategy:
+        sourceStrategy:
+          env:
+            - name: ENABLE_PIPENV
+              value: "1"
+            - name: THOTH_ADVISE
+              value: "0"
+            - name: THOTH_DRY_RUN
+              value: "1"
+          from:
+            kind: ImageStreamTag
+            name: s2i-thoth-fedora30-py37:latest
+        type: Source
+      triggers:
+        - imageChange:
+          type: ImageChange
+        - type: ConfigChange
+        - github:
+            secret: 0150d044a6b6dc24
+          type: GitHub

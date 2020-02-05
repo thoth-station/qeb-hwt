@@ -1,0 +1,122 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: qeb-hwt-deployment
+  annotations:
+    description: "Thoth Service: thamos advise"
+    openshift.io/display-name: "Thoth Service: thamos advise"
+    version: 0.1.0-dev
+    tags: thoth,github,app,thamos
+    template.openshift.io/documentation-url: https://github.com/Thoth-Station/
+    template.openshift.io/long-description: >
+      This template defines resources needed to deploy Qeb-Hwt, the backend
+      componets of https://github.com/marketplace/qeb-hwt
+    template.openshift.io/provider-display-name: "Red Hat, Inc."
+  labels:
+    template: qeb-hwt-deployment
+    app: qeb-hwt
+
+objects:
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: qeb-hwt
+      labels:
+        app: qeb-hwt
+        component: webhook-receiver
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0-dev
+    spec:
+      to:
+        kind: Service
+        name: webhook-receiver
+
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: webhook-receiver
+      labels:
+        app: qeb-hwt
+        component: webhook-receiver
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0-dev
+    spec:
+      ports:
+        - name: webhook-receiver
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+      selector:
+        app: qeb-hwt
+        component: webhook-receiver
+      type: ClusterIP
+
+  - kind: DeploymentConfig
+    apiVersion: apps.openshift.io/v1
+    metadata:
+      name: qeb-hwt-webhook-receiver
+      labels:
+        app: qeb-hwt
+        component: webhook-receiver
+      annotations:
+        thoth-station.ninja/template-version: 0.1.0-dev
+    spec:
+      replicas: 1
+      revisionHistoryLimit: 4
+      selector:
+        app: qeb-hwt
+        component: webhook-receiver
+      template:
+        metadata:
+          labels:
+            app: qeb-hwt
+            component: webhook-receiver
+          annotations:
+            thoth-station.ninja/template-version: 0.1.0-dev
+        spec:
+          containers:
+            - name: webhook-receiver
+              image: qeb-hwt-webhook-receiver:latest
+              env:
+                - name: ENV
+                  value: dev
+                - name: PYTHONPATH
+                  value: .
+                - name: THOTH_DEPLOYMENT_NAME
+                  value: aicoe-psi-prod
+                - name: SENTRY_DSN
+                  valueFrom:
+                    secretKeyRef:
+                      key: sentry-dsn
+                      name: qeb-hwt
+              envFrom:
+                - prefix: GITHUB_
+                  secretRef:
+                    name: qeb-hwt-github-app
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+            - name: ultrahook
+              image: ultrahook:latest
+              envFrom:
+                - configMapRef:
+                    name: ultrahook
+      test: false
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - webhook-receiver
+            from:
+              kind: ImageStreamTag
+              name: qeb-hwt-webhook-receiver:latest
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ultrahook
+            from:
+              kind: ImageStreamTag
+              name: ultrahook:latest
