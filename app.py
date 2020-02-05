@@ -136,13 +136,15 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         "github_event_type": "thoth_thamos_advise",
         "github_check_run_id": check_run_id,
         "github_installation_id": installation["id"],
-        "origin": repo_url,
+        "github_base_repo_url": base_repo_url,
+        "github_head_repo_url": repo_url,
         "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
         resp = await session.post(USER_API_URL, json=data)
         _LOGGER.info(f"on_pr_open_or_sync: user-api resp: {resp}")
 
+    # TODO: add timeout to keep the github check status sane
     resp = await github_api.patch(
         check_runs_updates_uri, preview_api_version="antiope", data={"name": CHECK_RUN_NAME, "status": "in_progress"},
     )
@@ -151,14 +153,14 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 # We simply extend the GitHub Event set for our use case ;)
 @process_event("thoth_thamos_advise", action="finished")
 @process_webhook_payload
-async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, installation, payload, **kwargs):
+async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, installation, payload, **kwargs):
     """Advise workflow has finished, now we need to send a check-run to the PR."""
     _LOGGER.info("on_thamos_workflow_finished: %s", kwargs)
 
     github_api: RawGitHubAPI = RUNTIME_CONTEXT.app_installation_client
     _LOGGER.info("on_thamos_workflow_finished: github_api=%s", github_api)
 
-    repo = repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
+    repo = base_repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
     check_runs_url = f"repos/{repo}/check-runs/{check_run_id}"
 
     conclusion: str

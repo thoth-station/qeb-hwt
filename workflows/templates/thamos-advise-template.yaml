@@ -16,14 +16,15 @@ spec:
           - name: "GITHUB_EVENT_TYPE"
           - name: "GITHUB_CHECK_RUN_ID"
           - name: "GITHUB_INSTALLATION_ID"
-          - name: "ORIGIN"
+          - name: "BASE_REPO_URL"
+          - name: "HEAD_REPO_URL"
           - name: "REVISION"
           - name: "THOTH_HOST"
         artifacts:
           - name: repository
             path: /mnt/inputs/artifacts/repository
             git:
-              repo: "{{inputs.parameters.ORIGIN}}"
+              repo: "{{inputs.parameters.HEAD_REPO_URL}}"
               revision: "{{inputs.parameters.REVISION}}"
       script:
         command:
@@ -53,8 +54,7 @@ spec:
             github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
             github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
             github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
-            origin="{{inputs.parameters.ORIGIN}}",
-            revision="{{inputs.parameters.REVISION}}",
+            base_repo_url="{{inputs.parameters.BASE_REPO_URL}}"
           )
         resources:
           limits:

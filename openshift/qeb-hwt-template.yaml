@@ -34,9 +34,13 @@ parameters:
     description: "GitHub App Installation ID"
     displayName: "Installation ID"
     required: true
-  - name: ORIGIN
-    description: "URL of the repo where the PR has been opened."
-    displayName: "URL of the repo"
+  - name: HEAD_REPO_URL
+    description: "URL of the Pull Request's head commit."
+    displayName: "URL of the Pull Request's head commit"
+    required: true
+  - name: BASE_REPO_URL
+    description: "URL of the GitHub repository containing the Pull Request."
+    displayName: "URL of the repository."
     required: true
   - name: REVISION
     description: "Pull Request head SHA"
@@ -70,16 +74,16 @@ objects:
             value: "${GITHUB_CHECK_RUN_ID}"
           - name: "GITHUB_INSTALLATION_ID"
             value: "${GITHUB_INSTALLATION_ID}"
-          - name: "ORIGIN"
-            value: "${ORIGIN}"
+          - name: "HEAD_REPO_URL"
+            value: "${HEAD_REPO_URL}"
+          - name: "BASE_REPO_URL"
+            value: "${BASE_REPO_URL}"
           - name: "REVISION"
             value: "${REVISION}"
           - name: "THOTH_HOST"
             value: "${THOTH_HOST}"
       volumes:
         - name: workdir
-          emptyDir: {}
-        - name: cache
           emptyDir: {}
       templates:
         - name: "qeb-hwt"
@@ -99,8 +103,10 @@ objects:
                       value: "{{workflow.parameters.GITHUB_CHECK_RUN_ID}}"
                     - name: "GITHUB_INSTALLATION_ID"
                       value: "{{workflow.parameters.GITHUB_INSTALLATION_ID}}"
-                    - name: "ORIGIN"
-                      value: "{{workflow.parameters.ORIGIN}}"
+                    - name: "HEAD_REPO_URL"
+                      value: "{{workflow.parameters.HEAD_REPO_URL}}"
+                    - name: "BASE_REPO_URL"
+                      value: "{{workflow.parameters.BASE_REPO_URL}}"
                     - name: "REVISION"
                       value: "{{workflow.parameters.REVISION}}"
                     - name: "THOTH_HOST"
