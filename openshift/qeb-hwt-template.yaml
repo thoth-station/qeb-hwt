@@ -34,11 +34,15 @@ parameters:
     description: "GitHub App Installation ID"
     displayName: "Installation ID"
     required: true
-  - name: HEAD_REPO_URL
+  - name: ORIGIN
+    description: "Origin of the repo where the Pull Request was opened.."
+    displayName: "Origin of the Pull Request."
+    required: true
+  - name: GITHUB_HEAD_REPO_URL
     description: "URL of the Pull Request's head commit."
     displayName: "URL of the Pull Request's head commit"
     required: true
-  - name: BASE_REPO_URL
+  - name: GITHUB_BASE_REPO_URL
     description: "URL of the GitHub repository containing the Pull Request."
     displayName: "URL of the repository."
     required: true
@@ -74,10 +78,12 @@ objects:
             value: "${GITHUB_CHECK_RUN_ID}"
           - name: "GITHUB_INSTALLATION_ID"
             value: "${GITHUB_INSTALLATION_ID}"
-          - name: "HEAD_REPO_URL"
-            value: "${HEAD_REPO_URL}"
-          - name: "BASE_REPO_URL"
-            value: "${BASE_REPO_URL}"
+          - name: "GITHUB_HEAD_REPO_URL"
+            value: "${GITHUB_HEAD_REPO_URL}"
+          - name: "GITHUB_BASE_REPO_URL"
+            value: "${GITHUB_BASE_REPO_URL}"
+          - name: "ORIGIN"
+            value: "${ORIGIN}"
           - name: "REVISION"
             value: "${REVISION}"
           - name: "THOTH_HOST"
@@ -103,10 +109,12 @@ objects:
                       value: "{{workflow.parameters.GITHUB_CHECK_RUN_ID}}"
                     - name: "GITHUB_INSTALLATION_ID"
                       value: "{{workflow.parameters.GITHUB_INSTALLATION_ID}}"
-                    - name: "HEAD_REPO_URL"
-                      value: "{{workflow.parameters.HEAD_REPO_URL}}"
-                    - name: "BASE_REPO_URL"
-                      value: "{{workflow.parameters.BASE_REPO_URL}}"
+                    - name: "GITHUB_HEAD_REPO_URL"
+                      value: "{{workflow.parameters.GITHUB_HEAD_REPO_URL}}"
+                    - name: "GITHUB_BASE_REPO_URL"
+                      value: "{{workflow.parameters.GITHUB_BASE_REPO_URL}}"
+                    - name: "ORIGIN"
+                      value: "{{workflow.parameters.ORIGIN}}"
                     - name: "REVISION"
                       value: "{{workflow.parameters.REVISION}}"
                     - name: "THOTH_HOST"

@@ -138,6 +138,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         "github_installation_id": installation["id"],
         "github_base_repo_url": base_repo_url,
         "github_head_repo_url": repo_url,
+        "origin": repo_url,
         "revision": pr_head_sha,
     }
     async with aiohttp.ClientSession() as session:
@@ -203,7 +204,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
     try:
-        _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=", installation, check_runs_url)
+        _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=%s", installation, check_runs_url)
 
         await github_api.patch(
             check_runs_url,
