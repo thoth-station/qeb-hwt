@@ -201,6 +201,8 @@ async def on_thamos_workflow_finished(*, action, repo_url, check_run_id, install
                     report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
     try:
+        _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=", installation, check_runs_url)
+
         await github_api.patch(
             check_runs_url,
             preview_api_version="antiope",
