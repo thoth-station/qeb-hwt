@@ -209,7 +209,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     conclusion = "failure"
 
                     error_msg: str = adviser_result["error_msg"]
-                    justification = f"Analysis has encountered errors."
+                    justification = f"Analysis has encountered errors: {error_msg}."
                 else:
                     conclusion = "success"
 
