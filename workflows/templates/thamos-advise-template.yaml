@@ -35,6 +35,7 @@ spec:
         source: |
           import os
           import json
+          import yaml
           from pathlib import Path
 
           from thoth.common import init_logging
@@ -45,12 +46,37 @@ spec:
           init_logging()
 
           os.chdir("/mnt/inputs/artifacts/repository")
-
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
           config.tls_verify = True
 
+          artifact_path = Path.cwd()
+
+          thoth_conf_file_path = artifact_path.joinpath(".thoth.yaml")
+
+          if thoth_conf_file_path.exists():
+            pass
+          else:
+            thoth_yaml = {
+                'host': '{{inputs.parameters.THOTH_HOST}}',
+                'tls_verify': 'false',
+                'requirements_format': 'pipenv',
+                'runtime_environments':[
+                  {
+                    'name':'fedora:31', 
+                    'operating_system':{
+                        'name': 'fedora',
+                        'version': '31',
+                    },
+                    'python_version': '3.6',
+                    'recommendation_type':'latest'
+                }
+              ]
+            }
+            with open('.thoth.yaml', 'w') as yaml_file:
+                yaml.dump(thoth_yaml, yaml_file, default_flow_style=False)
+
           analysis_id = advise_here(
-            recommendation_type="STABLE",
+            recommendation_type="latest",
             nowait=True,
             github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
             github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
@@ -60,8 +86,8 @@ spec:
           )
         resources:
           limits:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 250m
+            memory: 256Mi
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 250m
+            memory: 256Mi

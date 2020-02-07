@@ -189,7 +189,6 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
             try:
                 async with session.get(advise_url) as response:
                     _LOGGER.info("on_thamos_workflow_finished: response=%s", response)
-                    _LOGGER.info("on_thamos_workflow_finished: response.status=%s", response.status)
                     _LOGGER.info("on_thamos_workflow_finished: attempts=%s", attempts)
                 if response.status == 200:
                     attempts = max_attempts
