@@ -62,6 +62,8 @@ CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id",)
 USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
 
+MAX_CHARACTERS_LENGTH = 65535
+
 tracer = None
 
 
@@ -219,6 +221,9 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     justification = adviser_result["report"]["products"][0]["justification"]
 
                     report = json.dumps(adviser_report, indent=2)
+                    if len(report) > MAX_CHARACTERS_LENGTH:
+                        reduced_report = adviser_report["pipeline"]
+                        report = json.dumps(reduced_report, indent=2)
                     # a hack to display indentation spaces in the resulting HTML
                     report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
