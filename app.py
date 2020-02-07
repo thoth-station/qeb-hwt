@@ -166,7 +166,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     github_api: RawGitHubAPI = RUNTIME_CONTEXT.app_installation_client
     _LOGGER.info("on_thamos_workflow_finished: github_api=%s", github_api)
 
-    repo = base_repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
+    repo = base_repo_url.split("/", 4)[-1]  # i.e.: thoth-station/Qeb-Hwt
     check_runs_url = f"https://api.github.com/repos/{repo}/check-runs/{check_run_id}"
     _LOGGER.info("on_thamos_workflow_finished: check_runs_url=%s", check_runs_url)
 
@@ -201,6 +201,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
             if response.status != 200:
                 conclusion = "failure"
                 justification = "Could not retrieve analysis results."
+                report = ""
             else:
                 adviser_payload: dict = await response.json()
 
@@ -210,6 +211,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
                     error_msg: str = adviser_result["error_msg"]
                     justification = f"Analysis has encountered errors: {error_msg}."
+                    report = ""
                 else:
                     conclusion = "success"
 
