@@ -62,6 +62,8 @@ CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id",)
 USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
 
+MAX_CHARACTERS_LENGTH = 65535
+
 tracer = None
 
 
@@ -166,7 +168,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     github_api: RawGitHubAPI = RUNTIME_CONTEXT.app_installation_client
     _LOGGER.info("on_thamos_workflow_finished: github_api=%s", github_api)
 
-    repo = base_repo_url.split("/", 3)[-1]  # i.e.: thoth-station/Qeb-Hwt
+    repo = base_repo_url.split("/", 4)[-1]  # i.e.: thoth-station/Qeb-Hwt
     check_runs_url = f"https://api.github.com/repos/{repo}/check-runs/{check_run_id}"
     _LOGGER.info("on_thamos_workflow_finished: check_runs_url=%s", check_runs_url)
 
@@ -201,6 +203,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
             if response.status != 200:
                 conclusion = "failure"
                 justification = "Could not retrieve analysis results."
+                report = ""
             else:
                 adviser_payload: dict = await response.json()
 
@@ -209,7 +212,8 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     conclusion = "failure"
 
                     error_msg: str = adviser_result["error_msg"]
-                    justification = f"Analysis has encountered errors."
+                    justification = f"Analysis has encountered errors: {error_msg}."
+                    report = ""
                 else:
                     conclusion = "success"
 
@@ -217,6 +221,9 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     justification = adviser_result["report"]["products"][0]["justification"]
 
                     report = json.dumps(adviser_report, indent=2)
+                    if len(report) > MAX_CHARACTERS_LENGTH:
+                        reduced_report = adviser_report["pipeline"]
+                        report = json.dumps(reduced_report, indent=2)
                     # a hack to display indentation spaces in the resulting HTML
                     report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
 
