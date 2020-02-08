@@ -105,3 +105,4 @@ venv.bak/
 .vscode/
 qeb-hwt.2019-11-20.private-key.pem
 .thoth_last_analysis_id
+openshift/secret.yaml

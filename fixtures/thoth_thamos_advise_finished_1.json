@@ -1,0 +1,11 @@
+{
+    "action": "finished",
+    "installation": {
+        "id": 6181026
+    },
+    "repo_url": "https://api.github.com/repos/thoth-station/Qeb-Hwt",
+    "check_run_id": 394815661,
+    "payload": {
+        "analysis-id": "adviser-f1d5d010"
+    }
+}

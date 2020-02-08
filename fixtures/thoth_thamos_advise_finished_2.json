@@ -1,0 +1,11 @@
+{
+    "action": "finished",
+    "installation": {
+        "id": 6181026
+    },
+    "repo_url": "https://github.com/pacospace/srcops-testing",
+    "check_run_id": 417079839,
+    "payload": {
+        "analysis_id": "adviser-f1d5d010"
+    }
+}
