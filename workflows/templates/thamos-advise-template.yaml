@@ -62,7 +62,7 @@ spec:
                 'requirements_format': 'pipenv',
                 'runtime_environments':[
                   {
-                    'name':'fedora:31', 
+                    'name':'fedora:31',
                     'operating_system':{
                         'name': 'fedora',
                         'version': '31',

@@ -151,10 +151,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
     resp = await github_api.patch(
         check_runs_updates_uri,
         preview_api_version="antiope",
-        data={
-            "name": CHECK_RUN_NAME,
-            "head_sha": pr_head_sha,
-            "status": "in_progress"},
+        data={"name": CHECK_RUN_NAME, "head_sha": pr_head_sha, "status": "in_progress"},
     )
 
 
@@ -196,7 +193,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     attempts = max_attempts
                 else:
                     attempts += 1
-            except:
+            except Exception:
                 continue
 
         async with session.get(advise_url) as response:
