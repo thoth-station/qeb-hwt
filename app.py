@@ -218,11 +218,14 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     justification = adviser_result["report"]["products"][0]["justification"]
 
                     report = json.dumps(adviser_report, indent=2)
+                    # a hack to display indentation spaces in the resulting HTML
+                    report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
+                    _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
                     if len(report) > MAX_CHARACTERS_LENGTH:
                         reduced_report = adviser_report["pipeline"]
                         report = json.dumps(reduced_report, indent=2)
-                    # a hack to display indentation spaces in the resulting HTML
-                    report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
+                        report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
+                        _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
 
     try:
         _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=%s", installation, check_runs_url)
