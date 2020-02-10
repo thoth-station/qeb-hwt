@@ -59,8 +59,8 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
 # no trailing / !
-ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id",)
-USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
+ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id")
+USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt")
 
 MAX_CHARACTERS_LENGTH = 65535
 
@@ -73,13 +73,9 @@ async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
     app_id = hook["app_id"]
 
-    _LOGGER.info(
-        "Processing hwtping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen,
-    )
+    _LOGGER.info("Processing hwtping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen)
 
-    _LOGGER.info(
-        "GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app,
-    )
+    _LOGGER.info("GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app)
 
 
 @process_event("integration_installation", action="created")
@@ -102,7 +98,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     Send a status update to GitHub via Checks API.
     """
-    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}",)
+    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
@@ -215,16 +211,28 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     conclusion = "success"
 
                     adviser_report: dict = adviser_result["report"]
-                    justification = adviser_result["report"]["products"][0]["justification"]
+                    justification = adviser_report["products"][0]["justification"][0]["message"]
 
-                    report = json.dumps(adviser_report, indent=2)
+                    user_report = adviser_report["products"][0]
+                    user_report.pop("justification", None)
+                    if adviser_report["stack_info"]:
+                        user_report["stack_info"] = adviser_report["stack_info"]
+
+                    complete_report = json.dumps(user_report, indent=2)
                     # a hack to display indentation spaces in the resulting HTML
-                    report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
-                    _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
+                    report = re.sub(
+                        "\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), complete_report
+                    )
+                    _LOGGER.info("on_thamos_workflow_finished: len(report)=%s", len(report))
+
+                    # TODO: Split report results to include only relevant information
                     if len(report) > MAX_CHARACTERS_LENGTH:
-                        reduced_report = adviser_report["pipeline"]
-                        report = json.dumps(reduced_report, indent=2)
-                        report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
+                        user_report.pop("project", None)
+                        reduced_report = json.dumps(user_report, indent=2)
+                        # a hack to display indentation spaces in the resulting HTML
+                        report = re.sub(
+                            "\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), reduced_report
+                        )
                         _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
 
     try:
@@ -254,9 +262,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     except gidgethub.BadRequest as exc:
         _LOGGER.error(exc)
 
-    _LOGGER.info(
-        f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id,
-    )
+    _LOGGER.info(f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id)
 
 
 if __name__ == "__main__":
@@ -264,5 +270,5 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
+        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt"
     )

@@ -67,7 +67,7 @@ spec:
                         'name': 'fedora',
                         'version': '31',
                     },
-                    'python_version': '3.6',
+                    'python_version': '3.7',
                     'recommendation_type':'latest'
                 }
               ]
