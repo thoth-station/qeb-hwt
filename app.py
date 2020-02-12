@@ -211,28 +211,24 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     conclusion = "success"
 
                     adviser_report: dict = adviser_result["report"]
-                    justification = adviser_report["products"][0]["justification"][0]["message"]
+
+                    justification = adviser_report["products"][0]["justification"]
+                    justification = json.dumps(justification, indent=2)
 
                     user_report = adviser_report["products"][0]
                     user_report.pop("justification", None)
                     if adviser_report["stack_info"]:
                         user_report["stack_info"] = adviser_report["stack_info"]
 
-                    complete_report = json.dumps(user_report, indent=2)
-                    # a hack to display indentation spaces in the resulting HTML
-                    report = re.sub(
-                        "\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), complete_report
-                    )
+                    # Complete report
+                    report = json.dumps(user_report, indent=2)
                     _LOGGER.info("on_thamos_workflow_finished: len(report)=%s", len(report))
 
                     # TODO: Split report results to include only relevant information
                     if len(report) > MAX_CHARACTERS_LENGTH:
                         user_report.pop("project", None)
-                        reduced_report = json.dumps(user_report, indent=2)
-                        # a hack to display indentation spaces in the resulting HTML
-                        report = re.sub(
-                            "\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), reduced_report
-                        )
+                        # Reduced report
+                        report = json.dumps(user_report, indent=2)
                         _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
 
     try:
