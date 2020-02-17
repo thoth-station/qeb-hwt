@@ -175,6 +175,9 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
         analysis_id: str = payload["analysis_id"]
         _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
 
+        advise_url = urljoin(ADVISE_API_URL, analysis_id)
+        _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
+
         if "exception" in payload:
             exception: str = payload["exception"]
             _LOGGER.info("on_thamos_workflow_finished: exception=%s", exception)
@@ -185,8 +188,6 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
             report_message = ""
 
         if analysis_id:
-            advise_url = urljoin(ADVISE_API_URL, analysis_id)
-            _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
 
             # TODO: Find alternative solution to this workround
             attempts = 1
