@@ -59,8 +59,8 @@ logging.getLogger("octomachinery").setLevel(logging.DEBUG)
 CHECK_RUN_NAME = "Thoth: Advise (Developer Preview)"
 
 # no trailing / !
-ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id",)
-USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt",)
+ADVISE_API_URL = os.getenv("ADVISE_API_URL", "https://khemenu.thoth-station.ninja/api/v1/advise/python/adviser_id")
+USER_API_URL = os.getenv("USER_API_URL", "https://khemenu.thoth-station.ninja/api/v1/qeb-hwt")
 
 MAX_CHARACTERS_LENGTH = 65535
 
@@ -73,13 +73,9 @@ async def on_ping(*, hook, hook_id, zen):
     """React to ping webhook event."""
     app_id = hook["app_id"]
 
-    _LOGGER.info(
-        "Processing hwtping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen,
-    )
+    _LOGGER.info("Processing hwtping for App ID %s " "with Hook ID %s " "sharing Zen: %s", app_id, hook_id, zen)
 
-    _LOGGER.info(
-        "GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app,
-    )
+    _LOGGER.info("GitHub App from context in ping handler: %s", RUNTIME_CONTEXT.github_app)
 
 
 @process_event("integration_installation", action="created")
@@ -102,7 +98,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
 
     Send a status update to GitHub via Checks API.
     """
-    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}",)
+    _LOGGER.info(f"on_pr_open_or_sync: working on PR {pull_request['html_url']}")
 
     github_api = RUNTIME_CONTEXT.app_installation_client
 
@@ -280,9 +276,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     except gidgethub.BadRequest as exc:
         _LOGGER.error(exc)
 
-    _LOGGER.info(
-        f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id,
-    )
+    _LOGGER.info(f"on_thamos_workflow_finished: finished with `thamos advise`, updated %s", check_run_id)
 
 
 if __name__ == "__main__":
@@ -290,5 +284,5 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
+        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt"
     )
