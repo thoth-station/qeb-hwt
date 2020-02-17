@@ -84,13 +84,16 @@ spec:
               github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
               origin="{{inputs.parameters.ORIGIN}}"
             )
-          except Exception as exc:
-            print(exc)
-            exception = exc
+          except Exception as exception:
+            print(exception)
+
+            import hmac
+            import requests
+            import uuid
 
             payload = {}
             payload["analysis_id"] = ""
-            payload["exception"] = exception
+            payload["exception"] = str(exception)
 
             installation_id = {}
             installation_id["id"] = "{{inputs.parameters.GITHUB_INSTALLATION_ID}}"
