@@ -171,58 +171,87 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
     conclusion: str
     justification: str
-
-    report: str = "No report has been provided."
+    report: str
+    text: str
+    report_message: str
 
     async with aiohttp.ClientSession() as session:
         analysis_id: str = payload["analysis_id"]
         _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
 
-        advise_url = urljoin(ADVISE_API_URL, analysis_id)
-        _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
+        if "exception" in payload:
+            exception: str = payload["exception"]
+            _LOGGER.info("on_thamos_workflow_finished: exception=%s", exception)
+            conclusion = "failure"
+            justification = exception
+            report = "Report not produced."
+            text = report
+            report_message = ""
 
-        # TODO: Find alternative solution to this workround
-        attempts = 1
-        max_attempts = 6
-        while attempts < max_attempts:
-            try:
-                async with session.get(advise_url) as response:
-                    _LOGGER.info("on_thamos_workflow_finished: response=%s", response)
-                    _LOGGER.info("on_thamos_workflow_finished: attempts=%s", attempts)
-                if response.status == 200:
-                    attempts = max_attempts
-                else:
-                    attempts += 1
-            except Exception:
-                continue
+        if analysis_id:
+            advise_url = urljoin(ADVISE_API_URL, analysis_id)
+            _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
 
-        async with session.get(advise_url) as response:
-            if response.status != 200:
-                conclusion = "failure"
-                justification = "Could not retrieve analysis results."
-                report = ""
-            else:
-                adviser_payload: dict = await response.json()
+            # TODO: Find alternative solution to this workround
+            attempts = 1
+            max_attempts = 6
+            while attempts < max_attempts:
+                try:
+                    async with session.get(advise_url) as response:
+                        _LOGGER.info("on_thamos_workflow_finished: response=%s", response)
+                        _LOGGER.info("on_thamos_workflow_finished: attempts=%s", attempts)
+                    if response.status == 200:
+                        attempts = max_attempts
+                    else:
+                        attempts += 1
+                except Exception:
+                    continue
 
-                adviser_result: dict = adviser_payload["result"]
-                if adviser_result["error"]:
+            async with session.get(advise_url) as response:
+                if response.status != 200:
                     conclusion = "failure"
-
-                    error_msg: str = adviser_result["error_msg"]
-                    justification = f"Analysis has encountered errors: {error_msg}."
+                    justification = "Could not retrieve analysis results."
                     report = ""
+                    text = "Report cannot be provided, Please open an issue on Qeb-Hwt."
+                    report_message = ""
                 else:
-                    conclusion = "success"
+                    adviser_payload: dict = await response.json()
 
-                    adviser_report: dict = adviser_result["report"]
-                    justification = adviser_result["report"]["products"][0]["justification"]
+                    adviser_result: dict = adviser_payload["result"]
+                    if adviser_result["error"]:
+                        conclusion = "failure"
 
-                    report = json.dumps(adviser_report, indent=2)
-                    if len(report) > MAX_CHARACTERS_LENGTH:
-                        reduced_report = adviser_report["pipeline"]
-                        report = json.dumps(reduced_report, indent=2)
-                    # a hack to display indentation spaces in the resulting HTML
-                    report = re.sub("\n {2,}", lambda m: "\n" + "&ensp;" * (len(m.group().strip("\n"))), report,)
+                        error_msg: str = adviser_result["error_msg"]
+                        justification = f"Analysis has encountered errors: {error_msg}."
+                        report = ""
+                        text = f"Analysis report:\n{report}"
+                        report_message = "See the report below for more details."
+                    else:
+                        conclusion = "success"
+
+                        adviser_report: dict = adviser_result["report"]
+
+                        justification = adviser_report["products"][0]["justification"]
+                        justification = json.dumps(justification, indent=2)
+
+                        user_report = adviser_report["products"][0]
+                        user_report.pop("justification", None)
+                        if adviser_report["stack_info"]:
+                            user_report["stack_info"] = adviser_report["stack_info"]
+
+                        # Complete report
+                        report = json.dumps(user_report, indent=2)
+                        _LOGGER.info("on_thamos_workflow_finished: len(report)=%s", len(report))
+
+                        # TODO: Split report results to include only relevant information
+                        if len(report) > MAX_CHARACTERS_LENGTH:
+                            user_report.pop("project", None)
+                            # Reduced report
+                            report = json.dumps(user_report, indent=2)
+                            _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
+
+                        text = f"Analysis report:\n{report}"
+                        report_message = "See the report below for more details."
 
     try:
         _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=%s", installation, check_runs_url)
@@ -239,11 +268,11 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                 "external_id": analysis_id,
                 "output": {
                     "title": "Thoth's Advise",
-                    "text": f"Analysis report:\n{report}",
+                    "text": text,
                     "summary": (
                         f"Thoth's adviser finished with conclusion: '{conclusion}'\n\n"
                         f"Justification:\n{justification}\n\n"
-                        "See the report below for more details."
+                        f"{report_message}"
                     ),
                 },
             },

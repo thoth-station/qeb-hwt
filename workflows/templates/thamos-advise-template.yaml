@@ -74,16 +74,65 @@ spec:
             }
             with open('.thoth.yaml', 'w') as yaml_file:
                 yaml.dump(thoth_yaml, yaml_file, default_flow_style=False)
+          try:
+            analysis_id = advise_here(
+              recommendation_type="latest",
+              nowait=True,
+              github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
+              github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
+              github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
+              github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
+              origin="{{inputs.parameters.ORIGIN}}"
+            )
+          except Exception as exc:
+            print(exc)
+            exception = exc
 
-          analysis_id = advise_here(
-            recommendation_type="latest",
-            nowait=True,
-            github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
-            github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
-            github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
-            github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
-            origin="{{inputs.parameters.ORIGIN}}"
-          )
+            payload = {}
+            payload["analysis_id"] = ""
+            payload["exception"] = exception
+
+            installation_id = {}
+            installation_id["id"] = "{{inputs.parameters.GITHUB_INSTALLATION_ID}}"
+
+            data = {
+                "action": "finished",
+                "check_run_id": "{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
+                "installation": installation_id,
+                "base_repo_url": "{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
+                "payload": payload
+            }
+
+            key=os.environ["WEBHOOK_SECRET"]
+            msg = json.dumps(data).encode("UTF-8")
+
+            secret = key.encode("UTF-8")
+            signature = hmac.new(secret, msg, digestmod="sha1")
+
+            headers = {
+                "Accept": "application/vnd.github.antiope-preview+json",
+                "Content-Type": "application/json",
+                "User-Agent": "Workflow/adviser-00000000",
+                "X-GitHub-Delivery": str(uuid.uuid4()),
+                "X-GitHub-Event": "{{inputs.parameters.GITHUB_EVENT_TYPE}}",
+                "X-Hub-Signature": f"sha1={signature.hexdigest()}",
+            }
+
+            print("Headers:\n", headers)
+            print("Data:\n", data)
+
+            WEBHOOK_CALLBACK_URL = os.environ["WEBHOOK_CALLBACK_URL"]
+
+            response = requests.post(WEBHOOK_CALLBACK_URL, data=json.dumps(data), headers=headers)
+            response.raise_for_status()
+        env:
+          - name: "WEBHOOK_CALLBACK_URL"
+            value: "http://qeb-hwt-aicoe-prod-bots.cloud.paas.psi.redhat.com"
+          - name: WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: WEBHOOK_SECRET
+                name: qeb-hwt-github-app
         resources:
           limits:
             cpu: 250m
