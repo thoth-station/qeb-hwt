@@ -42,7 +42,7 @@ spec:
           from thamos.lib import advise_here
           from thamos.config import config
 
-          _LOGGER = logging.getLogger(__name__)
+          _LOGGER = logging.getLogger("thoth.qebhwt")
 
           os.chdir("/mnt/inputs/artifacts/repository")
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
