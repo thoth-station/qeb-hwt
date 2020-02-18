@@ -36,14 +36,13 @@ spec:
           import os
           import json
           import yaml
+          import logging
           from pathlib import Path
-
-          from thoth.common import init_logging
 
           from thamos.lib import advise_here
           from thamos.config import config
 
-          init_logging()
+          _LOGGER = logging.getLogger(__name__)
 
           os.chdir("/mnt/inputs/artifacts/repository")
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
@@ -85,7 +84,12 @@ spec:
               origin="{{inputs.parameters.ORIGIN}}"
             )
           except Exception as exception:
-            print(exception)
+            if isinstance(exception, FileNotFoundError):
+              _LOGGER.debug(exception)
+              exception = str(exception)
+            else:
+              _LOGGER.debug(json.loads(exception.body)['error'])
+              exception = json.loads(exception.body)['error']
 
             import hmac
             import requests
@@ -93,7 +97,7 @@ spec:
 
             payload = {}
             payload["analysis_id"] = ""
-            payload["exception"] = str(exception)
+            payload["exception"] = exception
 
             installation_id = {}
             installation_id["id"] = "{{inputs.parameters.GITHUB_INSTALLATION_ID}}"
