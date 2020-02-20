@@ -1,0 +1,105 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: qeb-hwt
+  namespace: default
+spec:
+  inputs:
+    resources:
+      - name: git-repo # target path is /workspace otherwise targetPath: specific needs to be included
+        resourceSpec:
+          type: git
+          description: "The input is code from a git repository"
+
+  outputs:
+    resources:
+      - name: justification
+        type: string
+        description: "Justification from adviser run"
+  steps:
+    - name: thamos-advise
+      image: "quay.io/pacospace/thamos:v0.8.1-dev"  # image need to contain python
+      script: |
+        #!/usr/bin/env python3
+        import os
+        import json
+        import yaml
+        import logging
+        from pathlib import Path
+
+        from thamos.lib import advise_here
+        from thamos.config import config
+
+        _LOGGER = logging.getLogger("thoth.qebhwt")
+
+        # os.chdir("/workspace")
+        config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
+        config.tls_verify = True
+
+        artifact_path = Path.cwd()
+
+        thoth_conf_file_path = artifact_path.joinpath(".thoth.yaml")
+
+        if thoth_conf_file_path.exists():
+          pass
+        else:
+          thoth_yaml = {
+              'host': '{{inputs.parameters.THOTH_HOST}}',
+              'tls_verify': 'false',
+              'requirements_format': 'pipenv',
+              'runtime_environments':[
+                {
+                  'name':'fedora:31',
+                  'operating_system':{
+                      'name': 'fedora',
+                      'version': '31',
+                  },
+                  'python_version': '3.6',
+                  'recommendation_type':'latest'
+              }
+            ]
+          }
+          with open('.thoth.yaml', 'w') as yaml_file:
+              yaml.dump(thoth_yaml, yaml_file, default_flow_style=False)
+        try:
+          analysis_id = advise_here(
+            recommendation_type="latest",
+            nowait=True,
+            github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
+            github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
+            github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
+            github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
+            origin="{{inputs.parameters.ORIGIN}}"
+          )
+        except Exception as exception:
+          if isinstance(exception, FileNotFoundError):
+            _LOGGER.debug(exception)
+            exception = str(exception)
+          else:
+            _LOGGER.debug(json.loads(exception.body)['error'])
+            exception = json.loads(exception.body)['error']
+
+      resources:
+        outputs:
+          - name: workspace
+            resource: payload
+
+    - name: extract-justification
+      image: "quay.io/pacospace/thamos:v0.8.1-dev"  # image need to contain python
+      script: |
+        #!/usr/bin/env python3
+        import os
+        import json
+      conditions: # run only if conditions are satisfied
+        - conditionRef: my-condition
+          resources:
+            - name: workspace
+              resource: payload
+      resources:
+        outputs:
+          - name: workspace
+            resource: justification
+
+  volumes:
+    - name: custom-volume
+      emptyDir: {}

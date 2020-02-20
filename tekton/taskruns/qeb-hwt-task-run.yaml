@@ -1,0 +1,32 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  name: qeb-hwt
+  namespace: default
+spec:
+  taskRef:
+    name: qeb-hwt-task
+  inputs:
+    resources:
+      - name: git-repo # target path is /workspace otherwise targetPath: specific needs to be included
+        resourceSpec:
+          type: git
+          params:
+            - name: url
+              value: $(inputs.params.GITHUB_HEAD_REPO_URL)
+            - name: revision
+              value: $(inputs.params.REVISION)
+    params:
+      - name: GITHUB_HEAD_REPO_URL
+        description: URL of the Pull Request's head commit.
+      - name: REVISION
+        description: Pull Request head SHA.
+  outputs:
+    resources:
+      - name: workspace
+        resourceRef:
+          name: justification
+  podTemplate:
+    volumes:
+      - name: custom-volume
+        emptyDir: {}
