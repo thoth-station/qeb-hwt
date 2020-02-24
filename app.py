@@ -220,9 +220,14 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
                         error_msg: str = adviser_result["error_msg"]
                         justification = f"Analysis has encountered errors: {error_msg}."
-                        report = ""
-                        text = f"Analysis report:\n{report}"
-                        report_message = "See the report below for more details."
+                        if adviser_result["report"]:
+                            report = adviser_result["report"]
+                            text = "See the report below for more details."
+                            report_message = "See the document below for more details."
+                        else:
+                            text = "Analysis report is missing."
+                            report_message = "See the document below for more details."
+
                     else:
                         conclusion = "success"
 
@@ -248,7 +253,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                             _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
 
                         text = f"Analysis report:\n{report}"
-                        report_message = "See the report below for more details."
+                        report_message = "See the document below for more details."
 
     try:
         _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=%s", installation, check_runs_url)
