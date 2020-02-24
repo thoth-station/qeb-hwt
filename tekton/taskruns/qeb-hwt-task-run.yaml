@@ -17,15 +17,26 @@ spec:
             - name: revision
               value: $(inputs.params.REVISION)
     params:
+      - name: WORKFLOW_ID
+        description: "a UUID for the workflow instance"
+      - name: GITHUB_EVENT_TYPE
+        description: "GitHub event Type"
+        value: "thoth_thamos_advise"
+      - name: GITHUB_CHECK_RUN_ID
+        description: "ID of the check-run that shall carry the thamos advise."
+      - name: GITHUB_INSTALLATION_ID
+        description: "GitHub App Installation ID"
+      - name: ORIGIN
+        description: "Origin of the repo where the Pull Request was opened.."
+      - name: GITHUB_BASE_REPO_URL
+        description: "URL of the GitHub repository containing the Pull Request."
       - name: GITHUB_HEAD_REPO_URL
         description: URL of the Pull Request's head commit.
       - name: REVISION
         description: Pull Request head SHA.
-  outputs:
-    resources:
-      - name: workspace
-        resourceRef:
-          name: justification
+      - name: THOTH_HOST
+        description: Host used to talk to User-API for Thoth.
+  
   podTemplate:
     volumes:
       - name: custom-volume

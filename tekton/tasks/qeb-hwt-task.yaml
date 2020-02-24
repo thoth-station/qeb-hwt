@@ -10,12 +10,26 @@ spec:
         resourceSpec:
           type: git
           description: "The input is code from a git repository"
-
-  outputs:
-    resources:
-      - name: justification
+    params:
+      - name: "WORKFLOW_ID"
         type: string
-        description: "Justification from adviser run"
+      - name: "GITHUB_EVENT_TYPE"
+        type: string
+      - name: "GITHUB_CHECK_RUN_ID"
+        type: integer
+      - name: "GITHUB_INSTALLATION_ID"
+        type: integer
+      - name: "GITHUB_BASE_REPO_URL"
+        type: string
+      - name: "GITHUB_HEAD_REPO_URL"
+        type: string
+      - name: "ORIGIN"
+        type: string
+      - name: "REVISION"
+        type: string
+      - name: "THOTH_HOST"
+        type: string
+
   steps:
     - name: thamos-advise
       image: "quay.io/pacospace/thamos:v0.8.1-dev"  # image need to contain python
@@ -33,7 +47,7 @@ spec:
         _LOGGER = logging.getLogger("thoth.qebhwt")
 
         # os.chdir("/workspace")
-        config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
+        config.explicit_host = "{{inputs.params.THOTH_HOST}}"
         config.tls_verify = True
 
         artifact_path = Path.cwd()
@@ -44,7 +58,7 @@ spec:
           pass
         else:
           thoth_yaml = {
-              'host': '{{inputs.parameters.THOTH_HOST}}',
+              'host': '{{inputs.params.THOTH_HOST}}',
               'tls_verify': 'false',
               'requirements_format': 'pipenv',
               'runtime_environments':[
@@ -64,12 +78,12 @@ spec:
         try:
           analysis_id = advise_here(
             recommendation_type="latest",
-            nowait=True,
-            github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
-            github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
-            github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
-            github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
-            origin="{{inputs.parameters.ORIGIN}}"
+            nowait=False,
+            github_event_type="{{inputs.params.GITHUB_EVENT_TYPE}}",
+            github_check_run_id="{{inputs.params.GITHUB_CHECK_RUN_ID}}",
+            github_installation_id="{{inputs.params.GITHUB_INSTALLATION_ID}}",
+            github_base_repo_url="{{inputs.params.GITHUB_BASE_REPO_URL}}",
+            origin="{{inputs.params.ORIGIN}}"
           )
         except Exception as exception:
           if isinstance(exception, FileNotFoundError):
@@ -79,26 +93,92 @@ spec:
             _LOGGER.debug(json.loads(exception.body)['error'])
             exception = json.loads(exception.body)['error']
 
-      resources:
-        outputs:
-          - name: workspace
-            resource: payload
+        import hmac
+        import requests
+        import uuid
 
-    - name: extract-justification
-      image: "quay.io/pacospace/thamos:v0.8.1-dev"  # image need to contain python
-      script: |
-        #!/usr/bin/env python3
-        import os
-        import json
-      conditions: # run only if conditions are satisfied
-        - conditionRef: my-condition
-          resources:
-            - name: workspace
-              resource: payload
-      resources:
-        outputs:
-          - name: workspace
-            resource: justification
+        metadata = {
+          "github_event_type": "{{inputs.params.GITHUB_EVENT_TYPE}}",
+          "github_check_run_id": "{{inputs.params.GITHUB_CHECK_RUN_ID}}",
+          "github_installation_id": "{{inputs.params.GITHUB_INSTALLATION_ID}}",
+          "github_base_repo_url": "{{inputs.params.GITHUB_BASE_REPO_URL}}",
+          "origin": "{{inputs.params.ORIGIN}}"
+        }
+
+        GITHUB_PARAMETERS = [
+          "github_event_type",
+          "github_check_run_id",
+          "github_installation_id",
+          "github_base_repo_url",
+          "origin"
+        ]
+
+        if all(p in GITHUB_PARAMETERS for p in metadata):
+          github_webhook_params = (
+              metadata["github_event_type"] is not None,
+              metadata["github_check_run_id"] is not None,
+              metadata["github_installation_id"] is not None,
+              metadata["github_base_repo_url"] is not None,
+              metadata["origin"] is not None,
+          )
+          github_webhook_params_present = sum(github_webhook_params)
+          if github_webhook_params_present != 0 and github_webhook_params_present == len(github_webhook_params):
+
+            payload = {}
+            if analysis_id:
+              payload["analysis_id"] = analysis_id
+            else:
+              payload["analysis_id"] = ""
+            if exception:
+              payload["exception"] = exception
+
+            installation_id = {}
+            installation_id["id"] = int(metadata["github_installation_id"])
+
+            data = {
+                "action": "finished",
+                "check_run_id": int(metadata["github_check_run_id"]),
+                "installation": installation_id,
+                "base_repo_url": metadata["github_base_repo_url"],
+                "payload": payload
+            }
+
+            key=os.environ["WEBHOOK_SECRET"]
+            msg = json.dumps(data).encode("UTF-8")
+
+            secret = key.encode("UTF-8")
+            signature = hmac.new(secret, msg, digestmod="sha1")
+
+            headers = {
+                "Accept": "application/vnd.github.antiope-preview+json",
+                "Content-Type": "application/json",
+                "User-Agent": "Workflow/{{inputs.params.WORKFLOW_ID}}",
+                "X-GitHub-Delivery": str(uuid.uuid4()),
+                "X-GitHub-Event": metadata["github_event_type"],
+                "X-Hub-Signature": f"sha1={signature.hexdigest()}",
+            }
+
+            print("Headers:\n", headers)
+            print("Data:\n", data)
+
+            WEBHOOK_CALLBACK_URL = os.environ["WEBHOOK_CALLBACK_URL"]
+
+            response = requests.post(WEBHOOK_CALLBACK_URL, data=json.dumps(data), headers=headers)
+            response.raise_for_status()
+          else:
+            print("There are missing values for GitHub App", metadata)
+        else:
+            print("There are missing keys for GitHub App", metadata)
+            print("Thamos has run through CLI")
+
+    env:
+      - name: "WEBHOOK_CALLBACK_URL"
+        value: "http://qeb-hwt-aicoe-prod-bots.cloud.paas.psi.redhat.com"
+      - name: WEBHOOK_SECRET
+        valueFrom:
+          secretKeyRef:
+            key: WEBHOOK_SECRET
+            name: qeb-hwt-github-app
 
   volumes:
     - name: custom-volume
