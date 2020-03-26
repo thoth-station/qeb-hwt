@@ -59,7 +59,7 @@ objects:
   - apiVersion: argoproj.io/v1alpha1
     kind: Workflow
     metadata:
-      generateName: "qeb-hwt${WORKFLOW_ID}"
+      name: "${WORKFLOW_ID}"
       annotations:
         thoth-station.ninja/template-version: 0.1.0
       labels:
