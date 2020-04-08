@@ -4,7 +4,7 @@ kind: WorkflowTemplate
 metadata:
   name: thamos-advise
   annotations:
-    thoth-station.ninja/template-version: 0.1.0-dev
+    thoth-station.ninja/template-version: 0.1.1
   labels:
     app: thoth
     component: thamos-advise
@@ -31,7 +31,7 @@ spec:
         command:
           - python3
         name: thamos-advise
-        image: "quay.io/pacospace/thamos:v0.8.1-dev"
+        image: "quay.io/pacospace/thamos:v0.9.2-dev"
         source: |
           import os
           import json
@@ -51,9 +51,10 @@ spec:
           artifact_path = Path.cwd()
 
           thoth_conf_file_path = artifact_path.joinpath(".thoth.yaml")
-
+          thoth_yaml = {}
           if thoth_conf_file_path.exists():
-            pass
+            with open(thoth_conf_file_path, 'r') as yaml_file:
+              thoth_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
           else:
             thoth_yaml = {
                 'host': '{{inputs.parameters.THOTH_HOST}}',
@@ -75,7 +76,8 @@ spec:
                 yaml.dump(thoth_yaml, yaml_file, default_flow_style=False)
           try:
             analysis_id = advise_here(
-              recommendation_type="latest",
+              recommendation_type=thoth_yaml['runtime_environments'][0]['recommendation_type'],
+              runtime_environment=thoth_yaml['runtime_environments'][0],
               nowait=True,
               github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
               github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
