@@ -111,6 +111,7 @@ async def on_pr_open_or_sync(*, action, number, pull_request, repository, sender
         _LOGGER.error(f"on_pr_open_or_sync: no Pull Request head sha found, stopped working!")
         return
 
+    _LOGGER.info(f"on_pr_open_or_sync: head_repo_url/origin {repo_url} will be used for check-run")
     _LOGGER.info(f"on_pr_open_or_sync: base_repo_url {base_repo_url} will be used for check-run")
     _LOGGER.info(f"on_pr_open_or_sync: PR commit id {pr_head_sha} will be used for check-run")
 
