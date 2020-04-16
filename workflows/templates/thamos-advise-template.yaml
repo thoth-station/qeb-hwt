@@ -27,6 +27,7 @@ spec:
             git:
               repo: "{{inputs.parameters.GITHUB_HEAD_REPO_URL}}"
               revision: "{{inputs.parameters.REVISION}}"
+              depth: 1
       script:
         command:
           - python3
@@ -144,8 +145,8 @@ spec:
                 name: qeb-hwt-github-app
         resources:
           limits:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 1
+            memory: 2Gi
           requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 1
+            memory: 2Gi
