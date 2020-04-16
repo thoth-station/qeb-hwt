@@ -10,11 +10,9 @@ octomachinery = "*"
 thoth-common = "*"
 
 [dev-packages]
-black = "*"
 pylint = "*"
 pytest = "*"
 pytest-asyncio = "*"
-pre-commit = "*"
 
 [requires]
 python_version = "3.7"
