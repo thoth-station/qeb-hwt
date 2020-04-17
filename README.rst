@@ -31,7 +31,11 @@ An example of configuration file template can be:
       operating_system:
         name: {os_name}
         version: '{os_version}'
+      hardware:
+        cpu_family: {cpu_family}
+        cpu_model: {cpu_model}
       python_version: '{python_version}'
+      cuda_version: {cuda_version}
       recommendation_type: stable
 
 Listing of automatically expanded configuration options which are supplied the
@@ -45,7 +49,13 @@ or SW discovery):
 +------------------------+--------------------------------+----------+
 | `os_version`           | version of operating system    |  30      |
 +------------------------+--------------------------------+----------+
+| `cpu_family`           | CPU family identifier          |  6       |
++------------------------+--------------------------------+----------+
+| `cpu_model`            | CPU model identifier           |  94      |
++------------------------+--------------------------------+----------+
 | `python_version`       | Python version (major.minor)   |  3.6     |
++------------------------+--------------------------------+----------+
+| `cuda_version`         | CUDA version (major.minor)     |  9.0     |
 +------------------------+--------------------------------+----------+
 
 These configuration options are optional and can be mixed with adjustment based
