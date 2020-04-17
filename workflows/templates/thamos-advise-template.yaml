@@ -55,7 +55,7 @@ spec:
           thoth_yaml = {}
           if thoth_conf_file_path.exists():
             with open(thoth_conf_file_path, 'r') as yaml_file:
-              thoth_yaml = yaml.load(yaml_file, Loader=yaml.FullLoader)
+              thoth_yaml = yaml.safe_load(yaml_file)
           else:
             thoth_yaml = {
                 'host': '{{inputs.parameters.THOTH_HOST}}',
