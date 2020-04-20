@@ -1,4 +1,5 @@
-# Qeb-Hwt
+Qeb-Hwt
+=======
 
 This is the implementation of https://github.com/apps/qeb-hwt.
 
@@ -71,8 +72,11 @@ provided by `pip-tools <https://pypi.org/project/pip-tools/>`__ (actually same a
 ``requirements_format`` configuration option, available options are:
 
 * ``requirements_format: pipenv`` for `Pipenv <https://pipenv.kennethreitz.org/en/latest/>`__ compatible output.
+
 Remember you need to have ``Pipfile`` in your directory in this case.
+
 * ``requirements_format: pip`` or ``requirements_format: pip-tools`` for `pip <https://pip.pypa.io/en/stable/user_guide/>`__ or `pip-tools <https://pypi.org/project/pip-tools/>`__ compatible output.
+
 Remember you need to have ``requirements.txt`` or ``requirements.in`` in your directory in this case.
 
 An example of configuration:
