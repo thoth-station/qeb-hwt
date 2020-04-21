@@ -50,32 +50,6 @@ spec:
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
           config.tls_verify = True
 
-          artifact_path = Path.cwd()
-
-          thoth_conf_file_path = artifact_path.joinpath(".thoth.yaml")
-          thoth_yaml = {}
-          if thoth_conf_file_path.exists():
-            with open(thoth_conf_file_path, 'r') as yaml_file:
-              thoth_yaml = yaml.safe_load(yaml_file)
-          else:
-            thoth_yaml = {
-                'host': '{{inputs.parameters.THOTH_HOST}}',
-                'tls_verify': 'false',
-                'requirements_format': 'pipenv',
-                'runtime_environments':[
-                  {
-                    'name':'fedora:31',
-                    'operating_system':{
-                        'name': 'fedora',
-                        'version': '31',
-                    },
-                    'python_version': '3.6',
-                    'recommendation_type':'latest'
-                }
-              ]
-            }
-            with open('.thoth.yaml', 'w') as yaml_file:
-                yaml.dump(thoth_yaml, yaml_file, default_flow_style=False)
           try:
             analysis_id = advise_here(
               recommendation_type=thoth_yaml['runtime_environments'][0]['recommendation_type'],
