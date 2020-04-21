@@ -96,8 +96,9 @@ spec:
 
               message += "\n\nFor more information have a look at Qeb-Hwt README file:" + \
               "\n https://github.com/thoth-station/Qeb-Hwt#usage\n"
-          
+
               message += """
+
                 Example:
                   host: khemenu.thoth-station.ninja
                   tls_verify: false
@@ -109,7 +110,7 @@ spec:
                       name: rhel
                       version: "8"
                     python_version: "3.6"
-                    recommendation_type: latest
+                    recommendation_type: stable
               """
 
           if available_exception:
