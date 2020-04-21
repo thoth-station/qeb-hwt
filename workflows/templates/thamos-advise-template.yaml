@@ -50,35 +50,80 @@ spec:
           config.explicit_host = "{{inputs.parameters.THOTH_HOST}}"
           config.tls_verify = True
 
-          try:
-            analysis_id = advise_here(
-              recommendation_type=thoth_yaml['runtime_environments'][0]['recommendation_type'],
-              runtime_environment=thoth_yaml['runtime_environments'][0],
-              nowait=True,
-              github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
-              github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
-              github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
-              github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
-              origin="{{inputs.parameters.ORIGIN}}"
-            )
-          except Exception as exception:
-            if isinstance(exception, FileNotFoundError):
-              _LOGGER.debug(exception)
-              exception = str(exception)
-            elif isinstance(exception, FileLoadError):
-              _LOGGER.debug(exception)
-              exception = str(exception)
-            else:
-              _LOGGER.debug(json.loads(exception.body)['error'])
-              exception = json.loads(exception.body)['error']
+          artifact_path = Path.cwd()
 
+          thoth_conf_file_path = artifact_path.joinpath(".thoth.yaml")
+
+          available_exception = False
+          exception_message = ""
+          config_file_exception = False
+          message = ""
+
+          if thoth_conf_file_path.exists():
+              with open(thoth_conf_file_path, 'r') as yaml_file:
+                thoth_yaml = yaml.safe_load(yaml_file)
+
+                try:
+                  analysis_id = advise_here(
+                    recommendation_type=thoth_yaml['runtime_environments'][0]['recommendation_type'],
+                    runtime_environment=thoth_yaml['runtime_environments'][0],
+                    nowait=True,
+                    github_event_type="{{inputs.parameters.GITHUB_EVENT_TYPE}}",
+                    github_check_run_id="{{inputs.parameters.GITHUB_CHECK_RUN_ID}}",
+                    github_installation_id="{{inputs.parameters.GITHUB_INSTALLATION_ID}}",
+                    github_base_repo_url="{{inputs.parameters.GITHUB_BASE_REPO_URL}}",
+                    origin="{{inputs.parameters.ORIGIN}}"
+                  )
+                except Exception as exception:
+                  if isinstance(exception, FileNotFoundError):
+                    _LOGGER.debug(exception)
+                    exception_message = str(exception)
+                  elif isinstance(exception, FileLoadError):
+                    _LOGGER.debug(exception)
+                    exception_message = str(exception)
+                  else:
+                    _LOGGER.debug(json.loads(exception.body)['error'])
+                    exception_message = json.loads(exception.body)['error']
+
+                  available_exception = True
+          else:
+              available_exception = True
+
+              config_file_exception = True
+
+              message = "No .thoth.yaml was provided."
+              message += " Please add .thoth.yaml to your PR."
+
+              message += "\n\nFor more information have a look at Qeb-Hwt README file:" + \
+              "\n https://github.com/thoth-station/Qeb-Hwt#usage\n"
+          
+              message += """
+                Example:
+                  host: khemenu.thoth-station.ninja
+                  tls_verify: false
+                  requirements_format: pipenv
+
+                  runtime_environments:
+                  - name: rhel:8
+                    operating_system:
+                      name: rhel
+                      version: "8"
+                    python_version: "3.6"
+                    recommendation_type: latest
+              """
+
+          if available_exception:
             import hmac
             import requests
             import uuid
 
             payload = {}
             payload["analysis_id"] = ""
-            payload["exception"] = exception
+
+            if config_file_exception:
+              payload["exception"] = message
+            else:
+              payload["exception"] = exception_message
 
             installation_id = {}
             installation_id["id"] = "{{inputs.parameters.GITHUB_INSTALLATION_ID}}"
