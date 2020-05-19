@@ -55,6 +55,22 @@ parameters:
     displayName: "Thoth Host"
     required: true
 
+  - name: IMAGE_STREAM_REGISTRY
+    description: Registry the ImageStream to be use lives in
+    displayName: ImageStream Registry
+    required: true
+    value: "quay.io"
+  - name: IMAGE_STREAM_NAMESPACE
+    description: Namespace the ImageStream to be use lives in
+    displayName: ImageStream Project
+    required: true
+    value: "thoth-station"
+  - name: IMAGE_STREAM_TAG
+    description: Tag of the ImageStream to be use
+    displayName: ImageStream Tag
+    required: true
+    value: "latest"
+
 objects:
   - apiVersion: argoproj.io/v1alpha1
     kind: Workflow
@@ -68,6 +84,7 @@ objects:
     spec:
       serviceAccountName: argo
       ttlStrategy:
+        secondsAfterCompletion: 900 # Keep qeb-hwt for 15 minutes.
         secondsAfterSuccess: 900  # Keep qeb-hwt for 15 minutes.
         # secondsAfterFailure kept unset to keep failed qeb-hwt workflows for debugging
       podGC:
@@ -91,6 +108,12 @@ objects:
             value: "${REVISION}"
           - name: "THOTH_HOST"
             value: "${THOTH_HOST}"
+          - name: IMAGE_STREAM_REGISTRY
+            value: "${IMAGE_STREAM_REGISTRY}"
+          - name: IMAGE_STREAM_NAMESPACE
+            value: "${IMAGE_STREAM_NAMESPACE}"
+          - name: IMAGE_STREAM_TAG
+            value: "${IMAGE_STREAM_TAG}"
       volumes:
         - name: workdir
           emptyDir: {}
@@ -122,3 +145,9 @@ objects:
                       value: "{{workflow.parameters.REVISION}}"
                     - name: "THOTH_HOST"
                       value: "{{workflow.parameters.THOTH_HOST}}"
+                    - name: "IMAGE_STREAM_REGISTRY"
+                      value: "{{workflow.parameters.IMAGE_STREAM_REGISTRY}}"
+                    - name: "IMAGE_STREAM_NAMESPACE"
+                      value: "{{workflow.parameters.IMAGE_STREAM_NAMESPACE}}"
+                    - name: "IMAGE_STREAM_TAG"
+                      value: "{{workflow.parameters.IMAGE_STREAM_TAG}}"
