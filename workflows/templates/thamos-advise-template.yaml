@@ -4,7 +4,7 @@ kind: WorkflowTemplate
 metadata:
   name: thamos-advise
   annotations:
-    thoth-station.ninja/template-version: 0.1.1
+    thoth-station.ninja/template-version: 0.1.2
   labels:
     app: thoth
     component: thamos-advise

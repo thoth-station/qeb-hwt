@@ -5,7 +5,7 @@ metadata:
   annotations:
     description: "Thoth: qeb-hwt Template"
     openshift.io/display-name: "Thoth: qeb-hwt"
-    version: 0.1.1
+    version: 0.1.2
     tags: thoth,ai-stacks,aistacks,qeb-hwt,machinelearning
     template.openshift.io/documentation-url: https://github.com/Thoth-Station/
     template.openshift.io/long-description: >
@@ -77,7 +77,7 @@ objects:
     metadata:
       name: "${WORKFLOW_ID}"
       annotations:
-        thoth-station.ninja/template-version: 0.1.1
+        thoth-station.ninja/template-version: 0.1.2
       labels:
         app: thoth
         component: qeb-hwt
