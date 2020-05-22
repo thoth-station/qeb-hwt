@@ -4,7 +4,7 @@ kind: WorkflowTemplate
 metadata:
   name: thamos-advise
   annotations:
-    thoth-station.ninja/template-version: 0.1.1
+    thoth-station.ninja/template-version: 0.1.2
   labels:
     app: thoth
     component: thamos-advise
@@ -21,6 +21,9 @@ spec:
           - name: "ORIGIN"
           - name: "REVISION"
           - name: "THOTH_HOST"
+          - name: "IMAGE_STREAM_REGISTRY"
+          - name: "IMAGE_STREAM_NAMESPACE"
+          - name: "IMAGE_STREAM_TAG"
         artifacts:
           - name: repository
             path: /mnt/inputs/artifacts/repository
@@ -32,7 +35,9 @@ spec:
         command:
           - python3
         name: thamos-advise
-        image: "quay.io/pacospace/thamos:v0.9.3-dev"
+        image: "{{inputs.parameters.IMAGE_STREAM_REGISTRY}}/\
+        {{inputs.parameters.IMAGE_STREAM_NAMESPACE}}/\
+        thoth-toolbox:{{inputs.parameters.IMAGE_STREAM_TAG}}"
         source: |
           import os
           import json
@@ -75,10 +80,7 @@ spec:
                     origin="{{inputs.parameters.ORIGIN}}"
                   )
                 except Exception as exception:
-                  if isinstance(exception, FileNotFoundError):
-                    _LOGGER.debug(exception)
-                    exception_message = str(exception)
-                  elif isinstance(exception, FileLoadError):
+                  if isinstance(exception, (FileNotFoundError, FileLoadError, KeyError, ValueError)):
                     _LOGGER.debug(exception)
                     exception_message = str(exception)
                   else:
