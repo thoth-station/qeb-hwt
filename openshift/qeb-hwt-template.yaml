@@ -84,7 +84,7 @@ objects:
     spec:
       serviceAccountName: argo
       ttlStrategy:
-        secondsAfterCompletion: 900 # Keep qeb-hwt for 15 minutes.
+        secondsAfterCompletion: 900  # Keep qeb-hwt for 15 minutes.
         secondsAfterSuccess: 900  # Keep qeb-hwt for 15 minutes.
         # secondsAfterFailure kept unset to keep failed qeb-hwt workflows for debugging
       podGC:
