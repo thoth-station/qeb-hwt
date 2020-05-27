@@ -34,7 +34,7 @@ spec:
         name: qeb-hwt-thamos-advise
         image: workflow-helpers
         env:
-          - name: WORKFLOW_TASK
+          - name: THOTH_WORKFLOW_TASK
             value: "qeb_hwt"
           - name: APP_SCRIPT
             value: "app.sh"
