@@ -173,12 +173,6 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     report_message: str
 
     async with aiohttp.ClientSession() as session:
-        analysis_id: str = payload["analysis_id"]
-        _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
-
-        advise_url = urljoin(ADVISE_API_URL, analysis_id)
-        _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
-
         if "exception" in payload:
             exception: str = payload["exception"]
             _LOGGER.info("on_thamos_workflow_finished: exception=%s", exception)
@@ -188,7 +182,12 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
             text = report
             report_message = ""
 
-        if analysis_id:
+        if payload["analysis_id"]:
+            analysis_id: str = payload["analysis_id"]
+            _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
+
+            advise_url = urljoin(ADVISE_API_URL, analysis_id)
+            _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
 
             # TODO: Find alternative solution to this workround
             attempts = 1
@@ -217,9 +216,8 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
                     adviser_result: dict = adviser_payload["result"]
                     if adviser_result["error"]:
-                        conclusion = "failure"
-
                         error_msg: str = adviser_result["error_msg"]
+                        conclusion = "failure"
                         justification = f"Analysis has encountered errors: {error_msg}."
                         if adviser_result["report"]:
                             report = adviser_result["report"]
