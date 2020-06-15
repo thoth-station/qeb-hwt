@@ -45,6 +45,7 @@ from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
 from thoth.common import WorkflowManager
+from thoth.qeb_hwt.utils import create_pretty_report_from_json
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
@@ -166,6 +167,7 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     check_runs_url = f"https://api.github.com/repos/{repo}/check-runs/{check_run_id}"
     _LOGGER.info("on_thamos_workflow_finished: check_runs_url=%s", check_runs_url)
 
+    advise_url: str
     conclusion: str
     justification: str
     report: str
@@ -173,21 +175,46 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
     report_message: str
 
     async with aiohttp.ClientSession() as session:
+
+        _LOGGER.info("on_thamos_workflow_finished: payload=%s", payload)
+
         if "exception" in payload:
-            exception: str = payload["exception"]
+            exception = payload["exception"]
+        else:
+            exception = None
+
+        analysis_id = payload["analysis_id"]
+        _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
+
+        advise_url = urljoin(ADVISE_API_URL, analysis_id)
+        _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
+
+        if exception:
             _LOGGER.info("on_thamos_workflow_finished: exception=%s", exception)
-            conclusion = "failure"
+
+            if "error_type" in payload:
+                error_type: str = payload["error_type"]
+
+                if error_type and error_type == "MissingThothYamlFile":
+                    conclusion = "action_required"
+                else:
+                    conclusion = "failure"
+
+            else:
+                conclusion = "failure"
+
             justification = exception
+
+            if exception == "Internal server error occurred, please contact administrator with provided details.":
+                justification += (
+                    "\nThoth Team is working to solve the issue as soon as possible. Thanks for your patience!"
+                )
+
             report = "Report not produced."
             text = report
             report_message = ""
 
-        if payload["analysis_id"]:
-            analysis_id: str = payload["analysis_id"]
-            _LOGGER.info("on_thamos_workflow_finished: analysis_id=%s", analysis_id)
-
-            advise_url = urljoin(ADVISE_API_URL, analysis_id)
-            _LOGGER.info("on_thamos_workflow_finished: advise_url=%s", advise_url)
+        if analysis_id:
 
             # TODO: Find alternative solution to this workround
             attempts = 1
@@ -205,54 +232,70 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                     continue
 
             async with session.get(advise_url) as response:
+
                 if response.status != 200:
                     conclusion = "failure"
                     justification = "Could not retrieve analysis results."
                     report = ""
                     text = "Report cannot be provided, Please open an issue on Qeb-Hwt."
                     report_message = ""
+
                 else:
                     adviser_payload: dict = await response.json()
 
                     adviser_result: dict = adviser_payload["result"]
+
                     if adviser_result["error"]:
+
                         error_msg: str = adviser_result["error_msg"]
                         conclusion = "failure"
                         justification = f"Analysis has encountered errors: {error_msg}."
+
                         if adviser_result["report"]:
                             report = adviser_result["report"]
                             text = "See the report below for more details."
                             report_message = "See the document below for more details."
+
                         else:
-                            text = "Analysis report is missing."
-                            report_message = "See the document below for more details."
+                            conclusion = "failure"
+                            justification = f"Analysis has encountered errors: {error_msg}."
+
+                            if adviser_result["report"]:
+                                report = adviser_result["report"]
+                                text = "See the report below for more details."
+                                report_message = "See the document below for more details."
+
+                            else:
+                                text = "Analysis report is missing."
+                                report_message = "See the document below for more details."
 
                     else:
                         conclusion = "success"
 
                         adviser_report: dict = adviser_result["report"]
 
-                        justification = adviser_report["products"][0]["justification"]
-                        justification = json.dumps(justification, indent=2)
-
-                        user_report = adviser_report["products"][0]
-                        user_report.pop("justification", None)
-                        if adviser_report["stack_info"]:
-                            user_report["stack_info"] = adviser_report["stack_info"]
+                        # TODO: Move logic to thoth-lab
+                        justification = create_pretty_report_from_json(report=adviser_report, is_justification=True)
 
                         # Complete report
-                        report = json.dumps(user_report, indent=2)
+                        report = create_pretty_report_from_json(report=adviser_report)
                         _LOGGER.info("on_thamos_workflow_finished: len(report)=%s", len(report))
 
                         # TODO: Split report results to include only relevant information
                         if len(report) > MAX_CHARACTERS_LENGTH:
-                            user_report.pop("project", None)
-                            # Reduced report
-                            report = json.dumps(user_report, indent=2)
-                            _LOGGER.info("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
+                            _LOGGER.warning("on_thamos_workflow_finished: reduced len(report)=%s", len(report))
 
                         text = f"Analysis report:\n{report}"
                         report_message = "See the document below for more details."
+        else:
+            analysis_id = "No-analysis-run"
+
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: check_runs_url=%s", check_runs_url)
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: conclusion=%s", conclusion)
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: advise_url=%s", advise_url)
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: analysis_id=%s", analysis_id)
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: text=%s", text)
+        _LOGGER.info("on_thamos_workflow_finished: sending check run: text=%s", report_message)
 
     try:
         _LOGGER.info("on_thamos_workflow_finished: installation_id=%s, check_run_url=%s", installation, check_runs_url)
@@ -289,5 +332,5 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt"
+        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
     )

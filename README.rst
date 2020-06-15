@@ -8,16 +8,16 @@ Let Bots, powered with AI and continuously learning to increase its knowledge, m
 Installation
 ============
 
-To install Qeb-HWt App, please refer to the following `link <https://github.com/thoth-station/Qeb-Hwt/blob/master/docs/INSTALLATION.md>`__. 
+To install Qeb-HWt App, please refer to the following `link <https://github.com/thoth-station/Qeb-Hwt/blob/master/docs/INSTALLATION.md>`__.
 
 Usage
 ======
 
-Qeb-Hwt is one of the integration of `Thamos CLI <https://github.com/thoth-station/adviser/blob/master/docs/source/integration.rst>`__. 
+Qeb-Hwt is one of the integration of `Thamos CLI <https://github.com/thoth-station/adviser/blob/master/docs/source/integration.rst>`__.
 Internally, it relies on `Thamos CLI <https://github.com/thoth-station/thamos/>`__
 and on actual `Thoth Adviser <https://github.com/thoth-station/adviser/>`__, core component that provides reccomendations.
 
-You need to provide your own custom configuration file as a template called `.thoth.yaml`. 
+You need to provide your own custom configuration file as a template called `.thoth.yaml`.
 
 An example of configuration file template can be:
 
