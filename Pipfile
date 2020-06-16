@@ -8,6 +8,8 @@ click = "*"
 aiohttp = "<4.0"
 octomachinery = "*"
 thoth-common = "*"
+pandas = "*"
+tabulate = "*"
 
 [dev-packages]
 pylint = "*"
