@@ -22,14 +22,15 @@ import pandas as pd
 from typing import Optional
 
 
-def create_pretty_report_from_json(report: dict, is_justification: bool = False) -> Optional[str]:
+def create_pretty_report_from_json(report: dict, is_justification: bool = False) -> str:
     """Create Markdown output from adviser report input."""
+    md = ""
     if not report:
-        return
+        return md
 
     products = report.get("products")
     if not products:
-        return
+        return md
 
     md = "Report"
 
