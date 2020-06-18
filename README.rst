@@ -94,3 +94,12 @@ An example of configuration:
         version: "8"
       python_version: "3.6"
       recommendation_type: latest
+
+Support for multiple runtime environments
+=========================================
+
+Thoth performs recommendations based on your hardware and software environment,
+so called runtime environments. You can specify more than just one runtime
+environment that should be targetted during recommendations as stated `here <https://github.com/thoth-station/thamos#support-for-multiple-runtime-environments>`__.
+
+Currently Qeb-Hwt Thoth Integration will take the first runtime environment entry stated in the ``runtime_environments`` listing by default.
