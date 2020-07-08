@@ -10,6 +10,7 @@ octomachinery = "*"
 thoth-common = "*"
 pandas = "*"
 tabulate = "*"
+thoth-report-processing = "*"
 
 [dev-packages]
 pylint = "*"
