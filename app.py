@@ -45,7 +45,7 @@ from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
 from thoth.common import WorkflowManager
-from thoth.report_processing.pretty_report import create_pretty_report_from_json
+from thoth.report_processing.adviser import Adviser
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
@@ -275,10 +275,10 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                         adviser_report: dict = adviser_result["report"]
 
                         # TODO: Move logic to thoth-lab or new component
-                        justification = create_pretty_report_from_json(report=adviser_report, is_justification=True)
+                        justification = Adviser.create_pretty_report_from_json(report=adviser_report, is_justification=True)
 
                         # Complete report
-                        report = create_pretty_report_from_json(report=adviser_report)
+                        report = Adviser.create_pretty_report_from_json(report=adviser_report)
                         _LOGGER.info("on_thamos_workflow_finished: len(report)=%s", len(report))
 
                         # TODO: Split report results to include only relevant information
