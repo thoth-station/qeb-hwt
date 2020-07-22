@@ -45,7 +45,7 @@ from octomachinery.utils.versiontools import get_version_from_scm_tag
 
 from thoth.common import init_logging
 from thoth.common import WorkflowManager
-from thoth.report_processing.adviser import Adviser
+from thoth.report_processing.components.adviser import Adviser
 
 from thoth.qeb_hwt.version import __version__ as qeb_hwt_version
 
