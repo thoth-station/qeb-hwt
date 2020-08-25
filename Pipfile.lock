@@ -830,11 +830,11 @@
         },
         "thoth-report-processing": {
             "hashes": [
-                "sha256:5675c7d14c68fdde89515f7ad3f3e750a88b681c25002b335c2f613d0277ab82",
-                "sha256:6ce36bdbcd05e2660e86e7f846c075ccd6648e59469a45a24e1a2599d5b93d36"
+                "sha256:11674a97a59e4ed923391fa1b671e43215ba563d377f4afe24d283ac59860785",
+                "sha256:d3ab03fcc94aa481d914c313423c7ed3dd857c24227aadf54c11c6f70e50990a"
             ],
             "index": "pypi",
-            "version": "==0.2.4"
+            "version": "==0.3.0"
         },
         "thoth-storages": {
             "hashes": [
