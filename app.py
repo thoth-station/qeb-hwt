@@ -274,7 +274,6 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
                         adviser_report: dict = adviser_result["report"]
 
-                        # TODO: Move logic to thoth-lab or new component
                         justification = Adviser.create_pretty_report_from_json(report=adviser_report, is_justification=True)
 
                         # Complete report
