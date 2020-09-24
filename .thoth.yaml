@@ -18,6 +18,7 @@ managers:
   - name: version
     configuration:
       maintainers:
+        - pacospace
         - goern
         - fridex
       assignees:
