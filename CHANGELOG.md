@@ -142,3 +142,22 @@ all the things that you see...
 * 🔥 fix file prevents loading other thoth. modules from PYTHONPATH
 * rearranged the template project
 * rearranged the template project
+
+## Release 0.3.1 (2020-09-24T17:13:46)
+### Features
+* Add new maintainer (#111)
+### Other
+* remove TODO already solved (#102)
+### Automatic Updates
+* :pushpin: Automatic update of dependency thoth-common from 0.19.0 to 0.20.0 (#109)
+* :pushpin: Automatic update of dependency thoth-common from 0.19.0 to 0.20.0 (#108)
+* :pushpin: Automatic update of dependency octomachinery from 0.2.2 to 0.3.0 (#107)
+* :pushpin: Automatic update of dependency pytest from 6.0.1 to 6.0.2 (#105)
+* :pushpin: Automatic update of dependency thoth-report-processing from 0.3.0 to 0.3.4 (#104)
+* :pushpin: Automatic update of dependency thoth-common from 0.17.2 to 0.19.0 (#103)
+* :pushpin: Automatic update of dependency thoth-common from 0.16.1 to 0.17.2 (#101)
+* :pushpin: Automatic update of dependency pylint from 2.5.3 to 2.6.0 (#99)
+* :pushpin: Automatic update of dependency pylint from 2.5.3 to 2.6.0 (#98)
+* :pushpin: Automatic update of dependency thoth-report-processing from 0.2.4 to 0.3.0 (#97)
+* :pushpin: Automatic update of dependency thoth-report-processing from 0.2.4 to 0.3.0 (#96)
+* :pushpin: Automatic update of dependency thoth-common from 0.16.0 to 0.16.1 (#95)
