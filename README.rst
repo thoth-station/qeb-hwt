@@ -3,7 +3,7 @@ Qeb-Hwt
 
 This is the implementation of https://github.com/apps/qeb-hwt.
 
-Let Bots, powered with AI and continuously learning to increase its knowledge, manage your dependencies.
+Let Bots, powered with AI and continuously learning to increase its knowledge, manage your dependencies..
 
 Installation
 ============
