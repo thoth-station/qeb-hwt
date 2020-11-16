@@ -251,6 +251,9 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
                         conclusion = "failure"
                         justification = f"Analysis has encountered errors: {error_msg}."
 
+                        if error_msg == "No direct dependencies found":
+                            conclusion = "neutral"
+
                         if adviser_result["report"]:
                             report = adviser_result["report"]
                             text = "See the report below for more details."
