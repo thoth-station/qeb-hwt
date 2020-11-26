@@ -161,3 +161,21 @@ all the things that you see...
 * :pushpin: Automatic update of dependency thoth-report-processing from 0.2.4 to 0.3.0 (#97)
 * :pushpin: Automatic update of dependency thoth-report-processing from 0.2.4 to 0.3.0 (#96)
 * :pushpin: Automatic update of dependency thoth-common from 0.16.0 to 0.16.1 (#95)
+
+## Release 0.3.2 (2020-11-26T13:22:35)
+### Features
+* :lock: Relock Pipfile.lock with package updates (#134)
+* Use neutral conclusion if dependencies are not found (#129)
+### Automatic Updates
+* :pushpin: Automatic update of dependency pytest from 6.1.1 to 6.1.2 (#132)
+* :pushpin: Automatic update of dependency pytest from 6.1.1 to 6.1.2 (#131)
+* :pushpin: Automatic update of dependency thoth-common from 0.20.2 to 0.20.4 (#130)
+* :pushpin: Automatic update of dependency aiohttp from 3.6.2 to 3.7.2 (#126)
+* :pushpin: Automatic update of dependency octomachinery from 0.3.2 to 0.3.4 (#127)
+* :pushpin: Automatic update of dependency thoth-common from 0.20.0 to 0.20.2 (#128)
+* :pushpin: Automatic update of dependency pytest from 6.0.2 to 6.1.1 (#123)
+* :pushpin: Automatic update of dependency pytest from 6.0.2 to 6.1.1 (#122)
+* :pushpin: Automatic update of dependency thoth-report-processing from 0.3.4 to 0.3.5 (#121)
+* :pushpin: Automatic update of dependency pytest from 6.0.2 to 6.1.1 (#120)
+* :pushpin: Automatic update of dependency thoth-report-processing from 0.3.4 to 0.3.5 (#119)
+* :pushpin: Automatic update of dependency octomachinery from 0.3.0 to 0.3.2 (#118)
