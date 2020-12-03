@@ -3,11 +3,11 @@ tls_verify: false
 requirements_format: pipenv
 
 runtime_environments:
-  - name: fc31
+  - name: ubi8
     operating_system:
-      name: fedora
-      version: "31"
-    python_version: "3.7"
+      name: ubi
+      version: "8"
+    python_version: "3.8"
     recommendation_type: LATEST
 
 managers:
