@@ -179,3 +179,15 @@ all the things that you see...
 * :pushpin: Automatic update of dependency pytest from 6.0.2 to 6.1.1 (#120)
 * :pushpin: Automatic update of dependency thoth-report-processing from 0.3.4 to 0.3.5 (#119)
 * :pushpin: Automatic update of dependency octomachinery from 0.3.0 to 0.3.2 (#118)
+
+## Release 0.3.3 (2021-03-26T02:49:58)
+### Features
+* Fix the list of maintainers
+* update the list of maintainers
+* prow config for pre-commit checks
+* :arrow_up: Automatic update of dependencies by Kebechet (#147)
+* :arrow_up: Automatic update of dependencies by Kebechet (#144)
+* :arrow_up: update CI/CD configuration (#145)
+* :arrow_up: Automatic update of dependencies by kebechet. (#141)
+* :arrow_up: Automatic update of dependencies by kebechet. (#138)
+* port to python 38 (#133)
