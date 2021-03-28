@@ -7,6 +7,8 @@ name = "pypi"
 click = "*"
 aiohttp = "<4.0"
 octomachinery = "*"
+gidgethub = "==4.2.0"
+pyjwt = "==1.7.1"
 thoth-common = "*"
 thoth-report-processing = "*"
 

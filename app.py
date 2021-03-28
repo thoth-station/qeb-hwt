@@ -277,7 +277,9 @@ async def on_thamos_workflow_finished(*, action, base_repo_url, check_run_id, in
 
                         adviser_report: dict = adviser_result["report"]
 
-                        justification = Adviser.create_pretty_report_from_json(report=adviser_report, is_justification=True)
+                        justification = Adviser.create_pretty_report_from_json(
+                            report=adviser_report, is_justification=True,
+                        )
 
                         # Complete report
                         report = Adviser.create_pretty_report_from_json(report=adviser_report)
@@ -334,5 +336,5 @@ if __name__ == "__main__":
     _LOGGER.debug("Debug mode turned on")
 
     run_app(  # pylint: disable=expression-not-assigned
-        name="Qeb-Hwt GitHub App", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
+        name="Qeb-Hwt", version=qeb_hwt_version, url="https://github.com/apps/qeb-hwt",
     )
