@@ -191,3 +191,8 @@ all the things that you see...
 * :arrow_up: Automatic update of dependencies by kebechet. (#141)
 * :arrow_up: Automatic update of dependencies by kebechet. (#138)
 * port to python 38 (#133)
+
+## Release 0.3.4 (2021-03-29T02:25:37)
+### Features
+* :fire: Reduce the cpu usage for the tasks
+* :fire: HOTFIX: Use the explicit pyjwt 1.7.1 for the github app (#153)
