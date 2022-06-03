@@ -1,5 +1,18 @@
 # Changelog for Qeb-Hwt
 
+## Release 0.3.5 (2022-06-03T17:39:40)
+* 32d11b6 :arrow_up: Automatic update of dependencies by Kebechet for the ubi8 environment
+* 46069fc :arrow_up: Automatic update of dependencies by Kebechet for the ubi8 environment (#166)
+* 98f5a33 :ship: Bump up base image initialized in CI. (#167)
+* 0c5ee22 :ship: Bump up base image initialized in CI. (#164)
+* 5d82f8e :arrow_up: Automatic update of dependencies by Kebechet for the ubi8 environment (#165)
+* bcfddaf updating pre-commit protocol (#163)
+* 6f86470 Update pyproject.toml to use Python 3.8 (#158)
+* 4d5d431 :arrow_up: Automatic update of dependencies by Kebechet for the ubi8 environment
+* 2816cbf Enable TLS verification
+* b8ad9f7 :arrow_up: Automatic update of dependencies by Kebechet for the ubi8 environment
+* a069cee :arrow_up: Automatic update of dependencies by Kebechet (#157)
+
 ## [0.1.0] - 2019-Nov-20 - goern
 
 ### Added
